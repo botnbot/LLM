@@ -134,7 +134,8 @@ cython_debug/
 .sqlite
 data/out/
 .db
-__pycache__
+cd C:\Projects\LLM
+rmdir /s /q __pycache____pycache__
 /media/
 /django_project_checklist.md
 .flake8
