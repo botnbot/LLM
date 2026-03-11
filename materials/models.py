@@ -8,8 +8,8 @@ class Course(models.Model):
     description = models.TextField(verbose_name='Описание')
 
     class Meta:
-        verbose_name = 'курс',
-        verbose_name_plural = 'курсы',
+        verbose_name = 'курс'
+        verbose_name_plural = 'курсы'
 
     def __str__(self):
         return self.name
@@ -17,7 +17,7 @@ class Course(models.Model):
 
 class Lesson(models.Model):
     name = models.CharField(max_length=50)
-    course = models.ForeignKey(Course, on_delete=CASCADE, related_name='lessons')
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='lessons')
     description = models.TextField(verbose_name='Описание')
     preview = models.ImageField(upload_to="course_previews/", null=True, blank=True)
     video_link = models.CharField(max_length=200)
@@ -26,6 +26,6 @@ class Lesson(models.Model):
         verbose_name = 'урок'
         verbose_name_plural = 'уроки'
 
-        def __str__(self):
-            return self.name
+    def __str__(self):
+         return self.name
 
