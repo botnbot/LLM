@@ -13,9 +13,17 @@ if not SECRET_KEY:
 
 DEBUG = os.getenv("DEBUG", "False").lower() in ("true", "1", "yes")
 
-ALLOWED_HOSTS = [host.strip() for host in os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",") if host.strip()]
+ALLOWED_HOSTS = [
+    host.strip()
+    for host in os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
+    if host.strip()
+]
 
-if not os.getenv("POSTGRES_DB") or not os.getenv("POSTGRES_PASSWORD") or not os.getenv("POSTGRES_USER"):
+if (
+    not os.getenv("POSTGRES_DB")
+    or not os.getenv("POSTGRES_PASSWORD")
+    or not os.getenv("POSTGRES_USER")
+):
     raise RuntimeError("Переменные окружения POSTGRES_DB не заданы")
 
 
@@ -47,10 +55,8 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-
     "rest_framework",
     "materials",
-
 ]
 
 MIDDLEWARE = [
@@ -107,7 +113,5 @@ USE_TZ = True
 
 STATIC_URL = "static/"
 
-MEDIA_URL = 'media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-
-
+MEDIA_URL = "media/"
+MEDIA_ROOT = os.path.join(BASE_DIR, "media")
