@@ -3,6 +3,7 @@ from users.models import Payments, User
 from materials.models import Course, Lesson
 from django.utils import timezone
 
+
 class Command(BaseCommand):
     help = "Создаёт примерные платежи для пользователей"
 
@@ -18,7 +19,7 @@ class Command(BaseCommand):
             paid_course=course1,
             paid_lesson=None,
             payment_amount=15000.00,
-            payment_method="bank_transfer"
+            payment_method="bank_transfer",
         )
 
         Payments.objects.create(
@@ -27,7 +28,7 @@ class Command(BaseCommand):
             paid_course=None,
             paid_lesson=lesson3,
             payment_amount=500.00,
-            payment_method="cash"
+            payment_method="cash",
         )
 
         self.stdout.write(self.style.SUCCESS("Примерные платежи созданы!"))
