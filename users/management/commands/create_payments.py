@@ -1,34 +1,58 @@
 from django.core.management.base import BaseCommand
-from users.models import Payments, User
+from datetime import datetime
+from users.models import User, Payments
 from materials.models import Course, Lesson
-from django.utils import timezone
 
 
 class Command(BaseCommand):
-    help = "Создаёт примерные платежи для пользователей"
+    help = "Создать тестовых пользователей, курсы, уроки и платежи"
 
     def handle(self, *args, **kwargs):
-        user1 = User.objects.get(pk=1)
-        user2 = User.objects.get(pk=2)
-        course1 = Course.objects.get(pk=1)
-        lesson3 = Lesson.objects.get(pk=3)
-
-        Payments.objects.create(
-            user=user1,
-            payment_date=timezone.now(),
-            paid_course=course1,
-            paid_lesson=None,
-            payment_amount=15000.00,
-            payment_method="bank_transfer",
+        # --- Пользователь ---
+        user, created_user = User.objects.get_or_create(
+            email="testuser@example.com",
+            defaults={"password": "123456"}
         )
+        if created_user:
+            self.stdout.write(self.style.SUCCESS(f"Пользователь {user.email} создан"))
+        else:
+            self.stdout.write(self.style.WARNING(f"Пользователь {user.email} уже существует"))
 
-        Payments.objects.create(
-            user=user2,
-            payment_date=timezone.now(),
-            paid_course=None,
-            paid_lesson=lesson3,
-            payment_amount=500.00,
-            payment_method="cash",
+        # --- Курс ---
+        course, created_course = Course.objects.get_or_create(
+            name="Тестовый курс",
+            defaults={"description": "Описание тестового курса"}
         )
+        if created_course:
+            self.stdout.write(self.style.SUCCESS(f"Курс '{course.name}' создан"))
+        else:
+            self.stdout.write(self.style.WARNING(f"Курс '{course.name}' уже существует"))
 
-        self.stdout.write(self.style.SUCCESS("Примерные платежи созданы!"))
+        # --- Урок ---
+        lesson, created_lesson = Lesson.objects.get_or_create(
+            name="Тестовый урок",
+            course=course,
+            defaults={"description": "Описание тестового урока"}
+        )
+        if created_lesson:
+            self.stdout.write(self.style.SUCCESS(f"Урок '{lesson.name}' создан"))
+        else:
+            self.stdout.write(self.style.WARNING(f"Урок '{lesson.name}' уже существует"))
+
+        # --- Платежи ---
+        payments_data = [
+            {"paid_course": course, "paid_lesson": lesson, "payment_amount": 1000, "payment_method": "cash"},
+            {"paid_course": course, "paid_lesson": lesson, "payment_amount": 2000, "payment_method": "bank_transfer"},
+        ]
+
+        for data in payments_data:
+            payment = Payments.objects.create(
+                user=user,
+                payment_date=datetime.now(),
+                **data
+            )
+            self.stdout.write(self.style.SUCCESS(
+                f"Платеж {payment.id} создан: {data['payment_amount']} руб, {data['payment_method']}"
+            ))
+
+        self.stdout.write(self.style.SUCCESS("Все тестовые данные созданы!"))
