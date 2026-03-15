@@ -48,7 +48,6 @@ LOGOUT_REDIRECT_URL = "users:login"
 AUTH_USER_MODEL = "users.User"
 
 INSTALLED_APPS = [
-    "users",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
