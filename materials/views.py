@@ -47,3 +47,8 @@ class CourseUpdateAPIView(UpdateAPIView):
 class CourseDestroyAPIView(DestroyAPIView):
     queryset = Course.objects.all()
     serializer_class = CourseSerializer
+
+
+class CourseViewSet(ModelViewSet):
+    queryset = Course.objects.all()
+    serializer_class = CourseSerializer
