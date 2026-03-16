@@ -1,19 +1,9 @@
-from rest_framework.viewsets import ModelViewSet
-
-from materials.models import Course
-from materials.serializers import CourseSerializer
-
 from rest_framework.generics import ListAPIView
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import OrderingFilter
 
 from users.models import Payments
 from users.serializers import PaymentsSerializer
-
-
-class CourseViewSet(ModelViewSet):
-    queryset = Course.objects.all()
-    serializer_class = CourseSerializer
 
 
 class PaymentsListAPIView(ListAPIView):
