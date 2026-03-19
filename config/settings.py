@@ -21,12 +21,11 @@ ALLOWED_HOSTS = [
 ]
 
 if (
-    not os.getenv("POSTGRES_DB")
-    or not os.getenv("POSTGRES_PASSWORD")
-    or not os.getenv("POSTGRES_USER")
+        not os.getenv("POSTGRES_DB")
+        or not os.getenv("POSTGRES_PASSWORD")
+        or not os.getenv("POSTGRES_USER")
 ):
     raise RuntimeError("Переменные окружения POSTGRES_DB не заданы")
-
 
 DATABASES = {
     "default": {
@@ -122,6 +121,7 @@ MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 REST_FRAMEWORK = {
     'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend'],
     'DEFAULT_AUTHENTICATION_CLASSES': ('rest_framework_simplejwt.authentication.JWTAuthentication',),
+    'DEFAULT_PERMISSION_CLASSES': ['rest_framework.permissions.IsAuthenticated',]
 }
 
 SIMPLE_JWT = {
