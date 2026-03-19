@@ -1,4 +1,3 @@
-from click import password_option
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import OrderingFilter
 from rest_framework.generics import (CreateAPIView, DestroyAPIView,
@@ -48,8 +47,10 @@ class UserCreateAPIView(CreateAPIView):
 # Платежи
 
 class PaymentsListAPIView(ListAPIView):
-    queryset = Payments.objects.all()
     serializer_class = PaymentsSerializer
+
+    def get_queryset(self):
+        return Payments.objects.filter(user=self.request.user)
 
     filter_backends = [DjangoFilterBackend, OrderingFilter]
     filterset_fields = ["paid_course", "paid_lesson", "payment_method"]
