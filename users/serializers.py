@@ -8,13 +8,12 @@ from users.models import Payments, User
 class UserSerializer(ModelSerializer):
     class Meta:
         model = User
-        fields = ("id", "email", "avatar", "phone", "city")
-        extra_kwargs = {
-            "password": {"write_only": True}
-        }
+        fields = ("id", "email", "password", "avatar", "phone", "city")
+        extra_kwargs = {"password": {"write_only": True}}
 
 
 from rest_framework import serializers
+
 
 class PaymentsSerializer(ModelSerializer):
     paid_course = CourseSerializer(read_only=True)
@@ -24,14 +23,14 @@ class PaymentsSerializer(ModelSerializer):
         queryset=Course.objects.all(),
         source="paid_course",
         write_only=True,
-        required=False
+        required=False,
     )
 
     paid_lesson_id = serializers.PrimaryKeyRelatedField(
         queryset=Lesson.objects.all(),
         source="paid_lesson",
         write_only=True,
-        required=False
+        required=False,
     )
 
     class Meta:
