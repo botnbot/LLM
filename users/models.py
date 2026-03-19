@@ -1,6 +1,8 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+from rest_framework.exceptions import ValidationError
 
+from materials import serializers
 from materials.models import Course, Lesson
 from users.managers import CustomUserManager
 
@@ -56,9 +58,16 @@ class Payments(models.Model):
         """Возвращает оплаченный курс или урок"""
         if self.paid_course:
             return self.paid_course
-        elif self.paid_lesson:
+        if self.paid_lesson:
             return self.paid_lesson
         return None
+
+    def clean(self):
+        if self.paid_course and self.paid_lesson:
+            raise ValidationError("Нельзя оплатить курс и урок одновременно")
+
+        if not self.paid_course and not self.paid_lesson:
+            raise ValidationError("Нужно выбрать курс или урок")
 
     def __str__(self):
         item = self.get_paid_item()

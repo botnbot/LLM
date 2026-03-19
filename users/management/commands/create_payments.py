@@ -7,7 +7,7 @@ from users.models import Payments, User
 
 
 class Command(BaseCommand):
-    help = "Создать тестовых пользователей, курсы, уроки и платежи"
+    """"Создать тестовых пользователей, курсы, уроки и платежи"""
 
     def handle(self, *args, **kwargs):
         # --- Пользователь ---
