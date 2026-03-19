@@ -13,3 +13,10 @@ class IsNotModerator(BasePermission):
 
     def has_permission(self, request, view):
         return not request.user.groups.filter(name="Moderators").exists()
+
+
+class IsOwner(BasePermission):
+    """Проверка: пользователь — создатель объекта"""
+
+    def has_object_permission(self, request, view, obj):
+        return hasattr(obj, "owner") and obj.owner == request.user
