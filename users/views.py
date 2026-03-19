@@ -1,12 +1,13 @@
 from click import password_option
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import OrderingFilter
+from rest_framework.generics import (CreateAPIView, DestroyAPIView,
+                                     ListAPIView, RetrieveAPIView,
+                                     UpdateAPIView)
 from rest_framework.permissions import AllowAny
-from rest_framework.generics import ListAPIView, CreateAPIView, RetrieveAPIView, UpdateAPIView, DestroyAPIView
 
 from users.models import Payments, User
-from users.serializers import UserSerializer
-from users.serializers import PaymentsSerializer
+from users.serializers import PaymentsSerializer, UserSerializer
 
 #  CRUD пользователей
 
