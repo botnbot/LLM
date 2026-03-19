@@ -1,5 +1,6 @@
 from rest_framework.serializers import ModelSerializer
 
+from materials.models import Course, Lesson
 from materials.serializers import CourseSerializer, LessonSerializer
 from users.models import Payments, User
 
@@ -7,24 +8,32 @@ from users.models import Payments, User
 class UserSerializer(ModelSerializer):
     class Meta:
         model = User
-        fields = "__all__"
+        fields = ("id", "email", "avatar", "phone", "city")
         extra_kwargs = {
             "password": {"write_only": True}
         }
 
 
+from rest_framework import serializers
+
 class PaymentsSerializer(ModelSerializer):
     paid_course = CourseSerializer(read_only=True)
     paid_lesson = LessonSerializer(read_only=True)
 
+    paid_course_id = serializers.PrimaryKeyRelatedField(
+        queryset=Course.objects.all(),
+        source="paid_course",
+        write_only=True,
+        required=False
+    )
+
+    paid_lesson_id = serializers.PrimaryKeyRelatedField(
+        queryset=Lesson.objects.all(),
+        source="paid_lesson",
+        write_only=True,
+        required=False
+    )
+
     class Meta:
         model = Payments
         fields = "__all__"
-
-    @staticmethod
-    def get_paid_item(obj):
-        if obj.paid_course:
-            return obj.paid_course.name
-        if obj.paid_lesson:
-            return obj.paid_lesson.name
-        return None
