@@ -1,7 +1,7 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
-from materials.models import Lesson, Course
+from materials.models import Course, Lesson
 from users.managers import CustomUserManager
 
 
@@ -62,5 +62,5 @@ class Payments(models.Model):
 
     def __str__(self):
         item = self.get_paid_item()
-        item_name = item.title if item else "Нет"
+        item_name = item.name if item else "Нет"
         return f"{self.user.email} — {item_name} — {self.payment_amount} руб. ({self.payment_method})"
