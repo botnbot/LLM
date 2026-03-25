@@ -11,14 +11,17 @@ from users.serializers import (PaymentsSerializer, UserProfileSerializer,
 
 
 class PaymentsListAPIView(ListAPIView):
-    queryset = Payments.objects.all()
     serializer_class = PaymentsSerializer
+    permission_classes = [IsAuthenticated]
 
     filter_backends = [DjangoFilterBackend, OrderingFilter]
 
     filterset_fields = ["paid_course", "paid_lesson", "payment_method"]
 
     ordering_fields = ["payment_date"]
+
+    def get_queryset(self):
+        return Payments.objects.filter(user=self.request.user)
 
 
 class UserViewSet(ModelViewSet):
