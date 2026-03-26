@@ -1,4 +1,5 @@
 from django.contrib.auth.models import AbstractUser
+from django.core.exceptions import ValidationError
 from django.db import models
 
 from materials.models import Lesson, Course
@@ -59,6 +60,13 @@ class Payments(models.Model):
         elif self.paid_lesson:
             return self.paid_lesson
         return None
+
+
+    def clean(self):
+        if self.paid_course and self.paid_lesson:
+            raise ValidationError("Нельзя указать одновременно курс и урок")
+        if not self.paid_course and not self.paid_lesson:
+            raise ValidationError("Нужно указать курс или урок")
 
     def __str__(self):
         item = self.get_paid_item()
