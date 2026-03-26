@@ -11,7 +11,6 @@ from users.models import Payments
 from users.serializers import PaymentsSerializer
 
 
-
 class PaymentsListAPIView(ListAPIView):
     queryset = Payments.objects.all()
     serializer_class = PaymentsSerializer

@@ -3,7 +3,8 @@ from rest_framework.generics import (
     ListAPIView,
     RetrieveAPIView,
     UpdateAPIView,
-    DestroyAPIView, get_object_or_404,
+    DestroyAPIView,
+    get_object_or_404,
 )
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -68,10 +69,7 @@ class SubscriptionAPIView(APIView):
 
         course = get_object_or_404(Course, id=course_id)
 
-        subscription = Subscription.objects.filter(
-            user=user,
-            course=course
-        )
+        subscription = Subscription.objects.filter(user=user, course=course)
 
         if subscription.exists():
             subscription.delete()

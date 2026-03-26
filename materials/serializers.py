@@ -30,10 +30,8 @@ class CourseSerializer(ModelSerializer):
         if user.is_anonymous:
             return False
 
-        return Subscription.objects.filter(
-            user=user,
-            course=course
-        ).exists()
+        return Subscription.objects.filter(user=user, course=course).exists()
+
 
 class LessonDetailSerializer(ModelSerializer):
     count_course_lessons = SerializerMethodField()
@@ -44,4 +42,11 @@ class LessonDetailSerializer(ModelSerializer):
 
     class Meta:
         model = Lesson
-        fields = ["id", "name", "course", "description", "video_link", "count_course_lessons"]
+        fields = [
+            "id",
+            "name",
+            "course",
+            "description",
+            "video_link",
+            "count_course_lessons",
+        ]

@@ -62,7 +62,6 @@ class Payments(models.Model):
             return self.paid_lesson
         return None
 
-
     def clean(self):
         if self.paid_course and self.paid_lesson:
             raise ValidationError("Нельзя указать одновременно курс и урок")
@@ -76,14 +75,20 @@ class Payments(models.Model):
 
 
 class Subscription(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL,on_delete=models.CASCADE, verbose_name='Подписчик')
-    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='subscriptions', verbose_name='Курс')
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, verbose_name="Подписчик"
+    )
+    course = models.ForeignKey(
+        Course,
+        on_delete=models.CASCADE,
+        related_name="subscriptions",
+        verbose_name="Курс",
+    )
 
     class Meta:
-        verbose_name='Подписка'
-        verbose_name_plural='Подписки'
+        verbose_name = "Подписка"
+        verbose_name_plural = "Подписки"
         unique_together = ("user", "course")
 
     def __str__(self):
         return f"{self.user.email} -> {self.course.name}"
-
