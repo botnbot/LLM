@@ -21,3 +21,4 @@ class PaymentsListAPIView(ListAPIView):
     filterset_fields = ["paid_course", "paid_lesson", "payment_method"]
 
     ordering_fields = ["payment_date"]
+    ordering = ["-payment_date"]
