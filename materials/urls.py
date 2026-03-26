@@ -8,26 +8,30 @@ from materials.views import (
     CourseListAPIView,
     CourseUpdateAPIView,
     CourseDestroyAPIView,
+    CourseViewSet,
 )
 from materials.apps import MaterialsConfig
 
 app_name = MaterialsConfig.name
 
 router = SimpleRouter()
-router.register("", LessonViewSet, basename="lessons")
+router.register("lessons", LessonViewSet, basename="lessons")
+router.register("courses", CourseViewSet, basename="courses")
 
-urlpatterns = [
-    path("courses/", CourseListAPIView.as_view(), name="courses_list"),
-    path("courses/<int:pk>/", CourseRetrieveAPIView.as_view(), name="courses_retrieve"),
-    path("courses/create/", CourseCreateAPIView.as_view(), name="courses_create"),
-    path(
-        "courses/<int:pk>/delete/",
-        CourseDestroyAPIView.as_view(),
-        name="courses_delete",
-    ),
-    path(
-        "courses/<int:pk>/update/", CourseUpdateAPIView.as_view(), name="courses_update"
-    ),
-]
+urlpatterns = router.urls
 
-urlpatterns += router.urls
+# urlpatterns = [
+#     path("courses/", CourseListAPIView.as_view(), name="courses_list"),
+#     path("courses/<int:pk>/", CourseRetrieveAPIView.as_view(), name="courses_retrieve"),
+#     path("courses/create/", CourseCreateAPIView.as_view(), name="courses_create"),
+#     path(
+#         "courses/<int:pk>/delete/",
+#         CourseDestroyAPIView.as_view(),
+#         name="courses_delete",
+#     ),
+#     path(
+#         "courses/<int:pk>/update/", CourseUpdateAPIView.as_view(), name="courses_update"
+#     ),
+# ]
+
+# urlpatterns += router.urls
