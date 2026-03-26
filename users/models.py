@@ -62,5 +62,5 @@ class Payments(models.Model):
 
     def __str__(self):
         item = self.get_paid_item()
-        item_name = item.title if item else "Нет"
+        item_name = item.name if item else "Нет"
         return f"{self.user.email} — {item_name} — {self.payment_amount} руб. ({self.payment_method})"
