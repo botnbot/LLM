@@ -1,5 +1,6 @@
 from django.db import models
 from django.db.models import CASCADE
+from rest_framework.exceptions import ValidationError
 
 
 class Course(models.Model):
@@ -10,6 +11,7 @@ class Course(models.Model):
     class Meta:
         verbose_name = "курс"
         verbose_name_plural = "курсы"
+
 
     def __str__(self):
         return self.name
@@ -25,6 +27,12 @@ class Lesson(models.Model):
     class Meta:
         verbose_name = "урок"
         verbose_name_plural = "уроки"
+
+    def clean(self):
+        if self.paid_course and self.paid_lesson:
+            raise ValidationError("Нельзя указать одновременно курс и урок")
+        if not self.paid_course and not self.paid_lesson:
+            raise ValidationError("Нужно указать курс или урок")
 
     def __str__(self):
         return self.name
