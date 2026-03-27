@@ -7,8 +7,6 @@ from rest_framework.generics import (
     DestroyAPIView,
 )
 from rest_framework.permissions import IsAuthenticated
-from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework.filters import OrderingFilter
 
 from materials.models import Course, Lesson
 from materials.serializers import (
@@ -17,6 +15,7 @@ from materials.serializers import (
     LessonDetailSerializer,
 )
 from users.permissions import IsModerator, IsOwner
+
 
 # Lesson ViewSet
 
@@ -34,7 +33,7 @@ class LessonViewSet(viewsets.ModelViewSet):
             return [IsAuthenticated(), IsModerator() | IsOwner()]
         elif self.action == "create":
             return [IsAuthenticated()]
-        else:  # list
+        else:
             return [IsAuthenticated()]
 
     def perform_create(self, serializer):
@@ -101,7 +100,7 @@ class CourseViewSet(viewsets.ModelViewSet):
             return [IsAuthenticated(), IsModerator() | IsOwner()]
         elif self.action == "create":
             return [IsAuthenticated()]
-        else:  # list
+        else:
             return [IsAuthenticated()]
 
     def perform_create(self, serializer):

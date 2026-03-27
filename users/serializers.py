@@ -1,4 +1,6 @@
+from rest_framework import serializers
 from rest_framework.serializers import ModelSerializer
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 from materials.models import Course, Lesson
 from materials.serializers import CourseSerializer, LessonSerializer
@@ -10,9 +12,6 @@ class UserSerializer(ModelSerializer):
         model = User
         fields = ("id", "email", "password", "avatar", "phone", "city")
         extra_kwargs = {"password": {"write_only": True}}
-
-
-from rest_framework import serializers
 
 
 class PaymentsSerializer(ModelSerializer):
@@ -36,3 +35,7 @@ class PaymentsSerializer(ModelSerializer):
     class Meta:
         model = Payments
         fields = "__all__"
+
+
+class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
+    username_field = "email"

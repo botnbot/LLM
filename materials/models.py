@@ -40,5 +40,8 @@ class Lesson(models.Model):
         verbose_name = "урок"
         verbose_name_plural = "уроки"
 
+    def perform_create(self, serializer):
+        serializer.save(owner=self.request.user)
+
     def __str__(self):
         return self.name
