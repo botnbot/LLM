@@ -13,7 +13,11 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 
 from users.models import Payments, User
 from users.permissions import IsOwner
-from users.serializers import PaymentsSerializer, UserSerializer, MyTokenObtainPairSerializer
+from users.serializers import (
+    PaymentsSerializer,
+    UserSerializer,
+    MyTokenObtainPairSerializer,
+)
 
 
 #  CRUD пользователей
@@ -61,7 +65,7 @@ class UserCreateAPIView(CreateAPIView):
     def perform_create(self, serializer):
         serializer.save(
             password=make_password(serializer.validated_data["password"]),
-            is_active=True
+            is_active=True,
         )
 
 
@@ -82,5 +86,3 @@ class PaymentsListAPIView(ListAPIView):
     filter_backends = [DjangoFilterBackend, OrderingFilter]
     filterset_fields = ["paid_course", "paid_lesson", "payment_method"]
     ordering_fields = ["payment_date"]
-
-

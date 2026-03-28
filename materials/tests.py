@@ -10,8 +10,12 @@ from users.models import User
 class LessonCRUDTests(APITestCase):
 
     def setUp(self):
-        self.moderator = User.objects.create_user(email="mod@example.com", password="password123")
-        self.user = User.objects.create_user(email="user@example.com", password="password123")
+        self.moderator = User.objects.create_user(
+            email="mod@example.com", password="password123"
+        )
+        self.user = User.objects.create_user(
+            email="user@example.com", password="password123"
+        )
 
         self.course1 = Course.objects.create(name="Курс 1")
         self.course2 = Course.objects.create(name="Курс 2")
@@ -24,7 +28,7 @@ class LessonCRUDTests(APITestCase):
         url = reverse("lessons-list")
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data['results']), 2)  # Проверка пагинации
+        self.assertEqual(len(response.data["results"]), 2)  # Проверка пагинации
 
     def test_retrieve_lesson(self):
         self.client.force_authenticate(user=self.user)
@@ -61,7 +65,9 @@ class LessonCRUDTests(APITestCase):
 class SubscriptionTests(APITestCase):
 
     def setUp(self):
-        self.user = User.objects.create_user(email="user@example.com", password="password123")
+        self.user = User.objects.create_user(
+            email="user@example.com", password="password123"
+        )
         self.course = Course.objects.create(name="Курс 1")
 
     def test_add_subscription(self):
@@ -70,7 +76,9 @@ class SubscriptionTests(APITestCase):
         response = self.client.post(url, {"course_id": self.course.id})
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data["message"], "подписка добавлена")
-        self.assertTrue(Subscription.objects.filter(user=self.user, course=self.course).exists())
+        self.assertTrue(
+            Subscription.objects.filter(user=self.user, course=self.course).exists()
+        )
 
     def test_remove_subscription(self):
         Subscription.objects.create(user=self.user, course=self.course)
@@ -79,4 +87,6 @@ class SubscriptionTests(APITestCase):
         response = self.client.post(url, {"course_id": self.course.id})
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data["message"], "подписка удалена")
-        self.assertFalse(Subscription.objects.filter(user=self.user, course=self.course).exists())
+        self.assertFalse(
+            Subscription.objects.filter(user=self.user, course=self.course).exists()
+        )

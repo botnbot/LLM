@@ -14,9 +14,7 @@ class LessonSerializer(ModelSerializer):
         fields = "__all__"
 
     video_link = serializers.CharField(
-        required=False,
-        allow_blank=True,
-        validators=[validate_youtube_link]
+        required=False, allow_blank=True, validators=[validate_youtube_link]
     )
 
 
