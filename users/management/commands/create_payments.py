@@ -1,11 +1,13 @@
-from django.core.management.base import BaseCommand
 from datetime import datetime
-from users.models import User, Payments
+
+from django.core.management.base import BaseCommand
+
 from materials.models import Course, Lesson
+from users.models import Payments, User
 
 
 class Command(BaseCommand):
-    help = "Создать тестовых пользователей, курсы, уроки и платежи"
+    """ "Создать тестовых пользователей, курсы, уроки и платежи"""
 
     def handle(self, *args, **kwargs):
         # --- Пользователь ---
