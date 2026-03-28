@@ -1,9 +1,9 @@
-from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ValidationError
 from django.db import models
 
-from materials.models import Lesson, Course
+from config import settings
+from materials.models import Course, Lesson
 from users.managers import CustomUserManager
 
 
@@ -58,15 +58,16 @@ class Payments(models.Model):
         """Возвращает оплаченный курс или урок"""
         if self.paid_course:
             return self.paid_course
-        elif self.paid_lesson:
+        if self.paid_lesson:
             return self.paid_lesson
         return None
 
     def clean(self):
         if self.paid_course and self.paid_lesson:
-            raise ValidationError("Нельзя указать одновременно курс и урок")
+            raise ValidationError("Нельзя оплатить курс и урок одновременно")
+
         if not self.paid_course and not self.paid_lesson:
-            raise ValidationError("Нужно указать курс или урок")
+            raise ValidationError("Нужно выбрать курс или урок")
 
     def __str__(self):
         item = self.get_paid_item()
@@ -75,20 +76,9 @@ class Payments(models.Model):
 
 
 class Subscription(models.Model):
-    user = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, verbose_name="Подписчик"
-    )
-    course = models.ForeignKey(
-        Course,
-        on_delete=models.CASCADE,
-        related_name="subscriptions",
-        verbose_name="Курс",
-    )
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    course = models.ForeignKey(Course, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        verbose_name = "Подписка"
-        verbose_name_plural = "Подписки"
         unique_together = ("user", "course")
-
-    def __str__(self):
-        return f"{self.user.email} -> {self.course.name}"
