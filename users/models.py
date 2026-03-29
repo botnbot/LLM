@@ -32,7 +32,7 @@ class Payments(models.Model):
     user = models.ForeignKey(
         to="users.User", on_delete=models.CASCADE, verbose_name="Пользователь"
     )
-    payment_date = models.DateTimeField(verbose_name="Дата оплаты")
+    payment_date = models.DateTimeField(auto_now_add=True, verbose_name="Дата оплаты")
     paid_course = models.ForeignKey(
         Course,
         null=True,
@@ -62,12 +62,18 @@ class Payments(models.Model):
             return self.paid_lesson
         return None
 
+
     def clean(self):
         if self.paid_course and self.paid_lesson:
             raise ValidationError("Нельзя оплатить курс и урок одновременно")
 
         if not self.paid_course and not self.paid_lesson:
             raise ValidationError("Нужно выбрать курс или урок")
+
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        super().save(*args, **kwargs)
 
     def __str__(self):
         item = self.get_paid_item()
