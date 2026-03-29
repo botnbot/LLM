@@ -32,7 +32,5 @@ urlpatterns = [
     path("users/<int:pk>/delete/", UserDestroyAPIView.as_view(), name="users_delete"),
     #  Платежи
     path("payments/", PaymentsListAPIView.as_view(), name="payments_list"),
-    # path("payments/", PaymentsListAPICreateView.as_view(), name="payments_list"),
-
-    path("payments/", PaymentsListAPIView.as_view(), name="payments_list"),
+    # path("payments/", PaymentsCreateAPIView.as_view(), name="payments_list"),
 ]
