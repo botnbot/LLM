@@ -1,0 +1,89 @@
+Index: users/tests.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>from django.urls import reverse\r\nfrom rest_framework import status\r\nfrom rest_framework.test import APITestCase\r\n\r\nfrom materials.models import Course, Lesson\r\nfrom users.models import User\r\n\r\n\r\nclass LessonTestCase(APITestCase):\r\n\r\n    def setUp(self):\r\n        self.user = User.objects.create(email=\"llm_user@mail.ru\")\r\n        self.admin = User.objects.create_superuser(email=\"llm_admin@mail.ru\")\r\n\r\n        self.course = Course.objects.create(name=\"1\", description=\"Описание1\")\r\n        self.lesson1 = Lesson.objects.create(\r\n            name=\"математика\", course=self.course, description=\"Описание11\"\r\n        )\r\n        self.client.force_authenticate(user=self.user)\r\n\r\n    def test_lesson_retrieve(self):\r\n        url = reverse(\"materials:lesson-detail\", args=(self.lesson1.pk,))\r\n        response = self.client.get(url)\r\n        data = response.json()\r\n        self.assertEqual(response.status_code, status.HTTP_200_OK)\r\n        self.assertEqual(data.get(\"name\"), self.lesson1.name)\r\n\r\n    def test_lesson_create(self):\r\n        url = reverse(\"materials:lesson-list\")\r\n        data = {\r\n            \"name\": \"химия\",\r\n            \"course\": self.course.id,\r\n            \"description\": \"Test description\",\r\n            \"video_link\": \"https://youtube.com/video\",\r\n        }\r\n\r\n        response = self.client.post(url, data)\r\n\r\n        self.assertEqual(response.status_code, status.HTTP_201_CREATED)\r\n        self.assertEqual(Lesson.objects.count(), 2)\r\n\r\n    def test_lesson_update(self):\r\n        url = reverse(\"materials:lesson-detail\", args=(self.lesson1.pk,))\r\n        response = self.client.patch(url)\r\n        data = {\"name\": \"химия\"}\r\n        self.assertEqual(response.status_code, status.HTTP_200_OK)\r\n        self.assertEqual(data.get(\"name\"), \"химия\")\r\n\r\n    def test_lesson_delete(self):\r\n        url = reverse(\"materials:lesson-detail\", args=(self.lesson1.pk,))\r\n        response = self.client.delete(url)\r\n        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)\r\n        self.assertEqual(Lesson.objects.all().count(), 0)\r\n\r\n    def test_lesson_list(self):\r\n        url = reverse(\"materials:lesson-list\")\r\n        response = self.client.get(\r\n            url,\r\n        )\r\n\r\n        self.assertEqual(response.status_code, status.HTTP_200_OK)\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/users/tests.py b/users/tests.py
+--- a/users/tests.py	(revision 535901e327d5db4f757cb7ed25f55e4dad60dc55)
++++ b/users/tests.py	(date 1774561316778)
+@@ -3,7 +3,7 @@
+ from rest_framework.test import APITestCase
+ 
+ from materials.models import Course, Lesson
+-from users.models import User
++from users.models import User, Subscription
+ 
+ 
+ class LessonTestCase(APITestCase):
+@@ -33,7 +33,6 @@
+             "description": "Test description",
+             "video_link": "https://youtube.com/video",
+         }
+-
+         response = self.client.post(url, data)
+ 
+         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+@@ -41,10 +40,10 @@
+ 
+     def test_lesson_update(self):
+         url = reverse("materials:lesson-detail", args=(self.lesson1.pk,))
+-        response = self.client.patch(url)
+         data = {"name": "химия"}
++        response = self.client.patch(url, data, format='json')
+         self.assertEqual(response.status_code, status.HTTP_200_OK)
+-        self.assertEqual(data.get("name"), "химия")
++        self.assertEqual(response.get("name"), "химия")
+ 
+     def test_lesson_delete(self):
+         url = reverse("materials:lesson-detail", args=(self.lesson1.pk,))
+@@ -54,8 +53,44 @@
+ 
+     def test_lesson_list(self):
+         url = reverse("materials:lesson-list")
+-        response = self.client.get(
+-            url,
+-        )
++        response = self.client.get(url)
++        data = response.json()
++
++        self.assertEqual(data["count"], Lesson.objects.count())
++
++        first_lesson = data["results"][0]
++        self.assertEqual(first_lesson["id"], self.lesson1.pk)
++        self.assertEqual(first_lesson["name"], self.lesson1.name)
++        self.assertEqual(first_lesson["description"], self.lesson1.description)
++        self.assertEqual(first_lesson["video_link"], self.lesson1.video_link)
++        self.assertEqual(first_lesson["course"], self.course.pk)
++
++
++class SubscriptionTestCase(APITestCase):
++
++    def setUp(self):
++        self.user = User.objects.create(email="user@mail.ru")
++        self.client.force_authenticate(user=self.user)
++        self.course = Course.objects.create(name="Test", description="Desc")
++
++    def test_subscription_create(self):
++        url = reverse("materials:subscriptions")
++        response = self.client.post(url, {"course_id": self.course.id})
+ 
+         self.assertEqual(response.status_code, status.HTTP_200_OK)
++        self.assertEqual(
++            Subscription.objects.filter(user=self.user, course=self.course).exists(),
++            True
++        )
++
++    def test_subscription_delete(self):
++        Subscription.objects.create(user=self.user, course=self.course)
++
++        url = reverse("materials:subscriptions")
++        response = self.client.post(url, {"course_id": self.course.id})
++
++        self.assertEqual(response.status_code, status.HTTP_200_OK)
++        self.assertEqual(
++            Subscription.objects.filter(user=self.user, course=self.course).exists(),
++            False
++        )
+\ No newline at end of file

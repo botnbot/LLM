@@ -1,0 +1,22 @@
+Index: materials/views.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>from rest_framework.generics import (\r\n    CreateAPIView,\r\n    ListAPIView,\r\n    RetrieveAPIView,\r\n    UpdateAPIView,\r\n    DestroyAPIView,\r\n    get_object_or_404,\r\n)\r\nfrom rest_framework.response import Response\r\nfrom rest_framework.views import APIView\r\nfrom rest_framework.viewsets import ModelViewSet\r\n\r\nfrom materials.models import Course, Lesson\r\nfrom materials.paginators import StandardResultsSetPagination\r\nfrom materials.serializers import (\r\n    CourseSerializer,\r\n    LessonSerializer,\r\n    LessonDetailSerializer,\r\n)\r\nfrom users.models import Subscription\r\n\r\n\r\nclass LessonViewSet(ModelViewSet):\r\n    queryset = Lesson.objects.all()\r\n    pagination_class = StandardResultsSetPagination\r\n\r\n    def get_serializer_class(self):\r\n        if self.action == \"retrieve\":\r\n            return LessonDetailSerializer\r\n        return LessonSerializer\r\n\r\n\r\nclass CourseCreateAPIView(CreateAPIView):\r\n    queryset = Course.objects.all()\r\n    serializer_class = CourseSerializer\r\n\r\n\r\nclass CourseListAPIView(ListAPIView):\r\n    queryset = Course.objects.all()\r\n    serializer_class = CourseSerializer\r\n    pagination_class = StandardResultsSetPagination\r\n\r\n\r\nclass CourseRetrieveAPIView(RetrieveAPIView):\r\n    queryset = Course.objects.all()\r\n    serializer_class = CourseSerializer\r\n\r\n\r\nclass CourseUpdateAPIView(UpdateAPIView):\r\n    queryset = Course.objects.all()\r\n    serializer_class = CourseSerializer\r\n\r\n\r\nclass CourseDestroyAPIView(DestroyAPIView):\r\n    queryset = Course.objects.all()\r\n    serializer_class = CourseSerializer\r\n\r\n\r\nclass CourseViewSet(ModelViewSet):\r\n    queryset = Course.objects.all()\r\n    serializer_class = CourseSerializer\r\n\r\n\r\nclass SubscriptionAPIView(APIView):\r\n\r\n    def post(self, request):\r\n        user = request.user\r\n        course_id = request.data.get(\"course_id\")\r\n\r\n        course = get_object_or_404(Course, id=course_id)\r\n\r\n        subscription = Subscription.objects.filter(user=user, course=course)\r\n\r\n        if subscription.exists():\r\n            subscription.delete()\r\n            message = \"подписка удалена\"\r\n        else:\r\n            Subscription.objects.create(user=user, course=course)\r\n            message = \"подписка добавлена\"\r\n\r\n        return Response({\"message\": message})\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/materials/views.py b/materials/views.py
+--- a/materials/views.py	(revision 535901e327d5db4f757cb7ed25f55e4dad60dc55)
++++ b/materials/views.py	(date 1774560280418)
+@@ -56,11 +56,6 @@
+     serializer_class = CourseSerializer
+ 
+ 
+-class CourseViewSet(ModelViewSet):
+-    queryset = Course.objects.all()
+-    serializer_class = CourseSerializer
+-
+-
+ class SubscriptionAPIView(APIView):
+ 
+     def post(self, request):
