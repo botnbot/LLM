@@ -1,5 +1,3 @@
-from datetime import datetime
-
 from django.core.management.base import BaseCommand
 
 from materials.models import Course, Lesson
@@ -12,8 +10,11 @@ class Command(BaseCommand):
     def handle(self, *args, **kwargs):
         # --- Пользователь ---
         user, created_user = User.objects.get_or_create(
-            email="testuser@example.com", defaults={"password": "123456"}
+            email="testuser@example.com",
         )
+        if created_user:
+            user.set_password("123456")
+            user.save()
         if created_user:
             self.stdout.write(self.style.SUCCESS(f"Пользователь {user.email} создан"))
         else:
@@ -49,12 +50,10 @@ class Command(BaseCommand):
         payments_data = [
             {
                 "paid_course": course,
-                "paid_lesson": lesson,
                 "payment_amount": 1000,
                 "payment_method": "cash",
             },
             {
-                "paid_course": course,
                 "paid_lesson": lesson,
                 "payment_amount": 2000,
                 "payment_method": "bank_transfer",
@@ -62,9 +61,7 @@ class Command(BaseCommand):
         ]
 
         for data in payments_data:
-            payment = Payments.objects.create(
-                user=user, payment_date=datetime.now(), **data
-            )
+            payment = Payments.objects.create(user=user, **data)
             self.stdout.write(
                 self.style.SUCCESS(
                     f"Платеж {payment.id} создан: {data['payment_amount']} руб, {data['payment_method']}"
