@@ -49,7 +49,7 @@ class UserUpdateAPIView(UpdateAPIView):
 
 class UserDestroyAPIView(DestroyAPIView):
     serializer_class = UserSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsOwner]
 
     def get_queryset(self):
         return User.objects.filter(id=self.request.user.id)
@@ -89,4 +89,4 @@ class PaymentsListAPIView(ListAPIView):
 
 
 # class PaymentsCreateAPIView(CreateAPIView):
-#     def post 
+#     def post
