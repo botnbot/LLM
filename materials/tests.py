@@ -70,6 +70,8 @@ class LessonCRUDTests(APITestCase):
         self.assertEqual(Lesson.objects.count(), 1)
 
 
+
+
 class SubscriptionTests(APITestCase):
 
     def setUp(self):
