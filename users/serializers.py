@@ -14,6 +14,9 @@ class UserSerializer(ModelSerializer):
         extra_kwargs = {"password": {"write_only": True}}
 
 
+from rest_framework import serializers
+
+
 class PaymentsSerializer(ModelSerializer):
     paid_course = CourseSerializer(read_only=True)
     paid_lesson = LessonSerializer(read_only=True)
