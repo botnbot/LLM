@@ -4,7 +4,6 @@ from django.db import models
 from rest_framework.exceptions import ValidationError
 
 from config import settings
-from materials import serializers
 from materials.models import Course, Lesson
 from users.managers import CustomUserManager
 
