@@ -33,10 +33,8 @@ class LessonViewSet(viewsets.ModelViewSet):
         return LessonSerializer
 
     def get_permissions(self):
-        if self.action in ["update", "partial_update", "destroy", "retrieve"]:
+        if self.action in ["update", "partial_update", "destroy"]:
             return [IsAuthenticated(), IsModeratorOrOwner()]
-        elif self.action == "create":
-            return [IsAuthenticated()]
         return [IsAuthenticated()]
 
     def perform_create(self, serializer):
@@ -49,9 +47,17 @@ class LessonViewSet(viewsets.ModelViewSet):
     #     return Lesson.objects.filter(owner=user)
 
     def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False):
+            return Lesson.objects.none()
+
         user = self.request.user
+
+        if not user.is_authenticated:
+            return Lesson.objects.filter(owner__isnull=True)
+
         if user.groups.filter(name="Moderators").exists():
             return Lesson.objects.all()
+
         return Lesson.objects.filter(Q(owner=user) | Q(owner__isnull=True))
 
 
