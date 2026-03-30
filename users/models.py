@@ -1,7 +1,9 @@
 from django.contrib.auth.models import AbstractUser
+from django.core.exceptions import ValidationError
 from django.db import models
 from rest_framework.exceptions import ValidationError
 
+from config import settings
 from materials import serializers
 from materials.models import Course, Lesson
 from users.managers import CustomUserManager
@@ -32,7 +34,7 @@ class Payments(models.Model):
     user = models.ForeignKey(
         to="users.User", on_delete=models.CASCADE, verbose_name="Пользователь"
     )
-    payment_date = models.DateTimeField(verbose_name="Дата оплаты")
+    payment_date = models.DateTimeField(auto_now_add=True, verbose_name="Дата оплаты")
     paid_course = models.ForeignKey(
         Course,
         null=True,
@@ -62,6 +64,7 @@ class Payments(models.Model):
             return self.paid_lesson
         return None
 
+
     def clean(self):
         if self.paid_course and self.paid_lesson:
             raise ValidationError("Нельзя оплатить курс и урок одновременно")
@@ -69,7 +72,21 @@ class Payments(models.Model):
         if not self.paid_course and not self.paid_lesson:
             raise ValidationError("Нужно выбрать курс или урок")
 
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        super().save(*args, **kwargs)
+
     def __str__(self):
         item = self.get_paid_item()
         item_name = item.name if item else "Нет"
         return f"{self.user.email} — {item_name} — {self.payment_amount} руб. ({self.payment_method})"
+
+
+class Subscription(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    course = models.ForeignKey(Course, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ("user", "course")

@@ -10,6 +10,7 @@ from users.views import (
     UserListAPIView,
     UserRetrieveAPIView,
     UserUpdateAPIView,
+    MyTokenObtainPairView,
 )
 
 app_name = UsersConfig.name
@@ -19,15 +20,11 @@ urlpatterns = [
     path("register/", UserCreateAPIView.as_view(), name="register"),
     #  JWT
     path(
-        "login/",
-        TokenObtainPairView.as_view(permission_classes=[AllowAny]),
-        name="login",
-    ),
-    path(
         "token/refresh/",
         TokenRefreshView.as_view(permission_classes=[AllowAny]),
         name="token_refresh",
     ),
+    path("token/", MyTokenObtainPairView.as_view(), name="token_obtain_pair"),
     #  CRUD пользователей
     path("users/", UserListAPIView.as_view(), name="users_list"),
     path("users/<int:pk>/", UserRetrieveAPIView.as_view(), name="users_retrieve"),
@@ -35,4 +32,5 @@ urlpatterns = [
     path("users/<int:pk>/delete/", UserDestroyAPIView.as_view(), name="users_delete"),
     #  Платежи
     path("payments/", PaymentsListAPIView.as_view(), name="payments_list"),
+    # path("payments/", PaymentsCreateAPIView.as_view(), name="payments_list"),
 ]

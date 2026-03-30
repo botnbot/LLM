@@ -1,4 +1,6 @@
+from rest_framework import serializers
 from rest_framework.serializers import ModelSerializer
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 from materials.models import Course, Lesson
 from materials.serializers import CourseSerializer, LessonSerializer
@@ -18,6 +20,7 @@ from rest_framework import serializers
 class PaymentsSerializer(ModelSerializer):
     paid_course = CourseSerializer(read_only=True)
     paid_lesson = LessonSerializer(read_only=True)
+    user = serializers.HiddenField(default=serializers.CurrentUserDefault())
 
     paid_course_id = serializers.PrimaryKeyRelatedField(
         queryset=Course.objects.all(),
@@ -35,4 +38,12 @@ class PaymentsSerializer(ModelSerializer):
 
     class Meta:
         model = Payments
-        fields = "__all__"
+        fields = [
+            "id", "payment_date",
+            "paid_course", "paid_lesson",
+            "payment_amount", "payment_method"
+        ]
+
+
+class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
+    username_field = "email"
