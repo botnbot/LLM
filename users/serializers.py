@@ -24,6 +24,7 @@ class PaymentsSerializer(ModelSerializer):
         source="paid_course",
         write_only=True,
         required=False,
+        label="ID курса"
     )
 
     paid_lesson_id = serializers.PrimaryKeyRelatedField(
@@ -31,14 +32,33 @@ class PaymentsSerializer(ModelSerializer):
         source="paid_lesson",
         write_only=True,
         required=False,
+        label="ID урока"
     )
+
+    def validate(self, data):
+        paid_course = data.get("paid_course")
+        paid_lesson = data.get("paid_lesson")
+
+        if not paid_course and not paid_lesson:
+            raise serializers.ValidationError("Нужно указать курс или урок")
+
+        if paid_course and paid_lesson:
+            raise serializers.ValidationError("Можно указать только курс или урок")
+
+        return data
 
     class Meta:
         model = Payments
         fields = [
-            "id", "payment_date",
-            "paid_course", "paid_lesson",
-            "payment_amount", "payment_method"
+            "id",
+            "user",
+            "payment_date",
+            "paid_course_id",
+            "paid_lesson_id",
+            "paid_course",
+            "paid_lesson",
+            "payment_amount",
+            "payment_method"
         ]
 
 
