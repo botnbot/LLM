@@ -1,7 +1,6 @@
 from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ValidationError
 from django.db import models
-from rest_framework.exceptions import ValidationError
 
 from config import settings
 from materials.models import Course, Lesson
@@ -26,13 +25,10 @@ class User(AbstractUser):
 
 class Payments(models.Model):
     PAYMENT_METHOD_CHOICES = [
+        ("stripe", "Stripe"),
         ("cash", "Наличные"),
-        ("bank_transfer", "Перевод на счет"),
     ]
 
-    user = models.ForeignKey(
-        to="users.User", on_delete=models.CASCADE, verbose_name="Пользователь"
-    )
     payment_date = models.DateTimeField(auto_now_add=True, verbose_name="Дата оплаты")
     paid_course = models.ForeignKey(
         Course,
@@ -49,10 +45,46 @@ class Payments(models.Model):
         verbose_name="Оплаченный урок",
     )
     payment_amount = models.DecimalField(
-        max_digits=10, decimal_places=2, verbose_name="Сумма оплаты"
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        verbose_name="Сумма оплаты",
+        help_text="Введите сумму оплаты",
+
+    )
+    session_id = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True,
+        verbose_name="ID сессии",
+        help_text="Укажите ID сессии",
     )
     payment_method = models.CharField(
         max_length=20, choices=PAYMENT_METHOD_CHOICES, verbose_name="Способ оплаты"
+    )
+    payment_link = models.URLField(
+        max_length=400,
+        blank=True,
+        null=True,
+        verbose_name="Ссылка на оплату",
+        help_text="Укажите ссылку на оплату",
+    )
+    user = models.ForeignKey(User,
+                             blank=True,
+                             null=True,
+                             on_delete=models.SET_NULL,
+                             verbose_name='пользователь',
+                             help_text='Укажите пользователя')
+
+    status = models.CharField(
+        max_length=20,
+        default="pending",
+        choices=[
+            ("pending", "Ожидание"),
+            ("paid", "Оплачено"),
+            ("canceled", "Отменено"),
+        ],
     )
 
     def get_paid_item(self):
@@ -79,8 +111,12 @@ class Payments(models.Model):
     def __str__(self):
         item = self.get_paid_item()
         item_name = item.name if item else "Нет"
-        return f"{self.user.email} — {item_name} — {self.payment_amount} руб. ({self.payment_method})"
+        user_email = self.user.email if self.user else "Нет пользователя"
+        return f"{user_email} — {item_name} — {self.payment_amount} руб. ({self.payment_method})"
 
+    class Meta:
+        verbose_name='Платеж'
+        verbose_name_plural='Платежи'
 
 class Subscription(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
