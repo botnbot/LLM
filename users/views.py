@@ -1,5 +1,6 @@
 from django.contrib.auth.hashers import make_password
 from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.exceptions import ValidationError
 from rest_framework.filters import OrderingFilter
 from rest_framework.generics import (
     CreateAPIView,
@@ -18,6 +19,7 @@ from users.serializers import (
     UserSerializer,
     MyTokenObtainPairSerializer,
 )
+from users.service import create_stripe_price, create_stripe_session
 
 
 #  CRUD пользователей
@@ -75,6 +77,38 @@ class MyTokenObtainPairView(TokenObtainPairView):
 
 # Платежи
 
+class PaymentsCreateAPIView(CreateAPIView):
+    serializer_class = PaymentsSerializer
+    permission_classes = [IsAuthenticated]
+
+    def perform_create(self, serializer):
+        payment = serializer.save(user=self.request.user)
+
+        item = payment.get_paid_item()
+        if not item:
+            raise ValidationError("Не указан курс или урок")
+
+        if payment.paid_course:
+            amount = 5000
+        elif payment.paid_lesson:
+            amount = 1000
+        else:
+            payment.delete()
+            raise ValidationError("Не удалось определить сумму")
+
+        try:
+            price = create_stripe_price(amount)
+            session_id, payment_link = create_stripe_session(price)
+        except Exception as e:
+            payment.delete()
+            raise ValidationError(f"Ошибка оплаты: {str(e)}")
+
+        payment.session_id = session_id
+        payment.payment_link = payment_link
+        payment.payment_method = "stripe"
+        payment.payment_amount = amount
+        payment.save()
+
 
 class PaymentsListAPIView(ListAPIView):
     serializer_class = PaymentsSerializer
@@ -87,6 +121,3 @@ class PaymentsListAPIView(ListAPIView):
     filterset_fields = ["paid_course", "paid_lesson", "payment_method"]
     ordering_fields = ["payment_date"]
 
-
-# class PaymentsCreateAPIView(CreateAPIView):
-#     def post
