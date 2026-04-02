@@ -14,6 +14,9 @@ djangorestframework-simplejwt = "^5.5.1"
 coverage = "^7.13.5"
 drf-yasg = "^1.21.15"
 stripe = "^15.0.0"
+redis = "^7.4.0"
+eventlet = "^0.40.4"
+celery = "^5.6.3"
 
 
 [build-system]
