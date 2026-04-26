@@ -1,9 +1,10 @@
 from django.urls import path
 from rest_framework.permissions import AllowAny
-from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from rest_framework_simplejwt.views import TokenRefreshView
 
 from users.apps import UsersConfig
 from users.views import (
+    PaymentsCreateAPIView,
     PaymentsListAPIView,
     UserCreateAPIView,
     UserDestroyAPIView,
@@ -32,5 +33,5 @@ urlpatterns = [
     path("users/<int:pk>/delete/", UserDestroyAPIView.as_view(), name="users_delete"),
     #  Платежи
     path("payments/", PaymentsListAPIView.as_view(), name="payments_list"),
-    # path("payments/", PaymentsCreateAPIView.as_view(), name="payments_list"),
+    path("payments/create/", PaymentsCreateAPIView.as_view(), name="payments_create"),
 ]

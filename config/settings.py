@@ -21,9 +21,9 @@ ALLOWED_HOSTS = [
 ]
 
 if (
-    not os.getenv("POSTGRES_DB")
-    or not os.getenv("POSTGRES_PASSWORD")
-    or not os.getenv("POSTGRES_USER")
+        not os.getenv("POSTGRES_DB")
+        or not os.getenv("POSTGRES_PASSWORD")
+        or not os.getenv("POSTGRES_USER")
 ):
     raise RuntimeError("Переменные окружения POSTGRES_DB не заданы")
 
@@ -60,6 +60,7 @@ INSTALLED_APPS = [
     "django_filters",
     "rest_framework_simplejwt",
     "drf_yasg",
+    "django_celery_beat",
 ]
 
 MIDDLEWARE = [
@@ -130,7 +131,7 @@ REST_FRAMEWORK = {
 }
 
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=15),
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=30),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
 }
 
@@ -146,3 +147,18 @@ SWAGGER_SETTINGS = {
         }
     },
 }
+
+REDIS_HOST = os.getenv("REDIS_HOST", "127.0.0.1")
+REDIS_PORT = os.getenv("REDIS_PORT", "6379")
+REDIS_DB = os.getenv("REDIS_DB", "0")
+
+CELERY_BROKER_URL = f"redis://{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB}"
+
+CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_TASK_SERIALIZER = "json"
+
+CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
+
+
+CELERY_RESULT_SERIALIZER = "json"  # Добавьте эту строку
+CELERY_TIMEZONE = TIME_ZONE

@@ -88,5 +88,20 @@ class PaymentsListAPIView(ListAPIView):
     ordering_fields = ["payment_date"]
 
 
-# class PaymentsCreateAPIView(CreateAPIView):
-#     def post
+class PaymentsCreateAPIView(CreateAPIView):
+    queryset = Payments.objects.all()
+    serializer_class = PaymentsSerializer
+    permission_classes = [IsAuthenticated]
+
+    def perform_create(self, serializer):
+        payment = serializer.save(user=self.request.user)
+        item = payment.get_paid_item()
+        if not item:
+            raise ValueError("Не указан курс или урок")
+        amount = payment.payment_amount
+        price = create_stripe_price(amount )
+        session_id, payment_link = create_stripe_session(price)
+        payment.session_id = session_id
+        payment.link = payment_link
+        payment.save()
+
