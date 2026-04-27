@@ -11,7 +11,7 @@ from users.views import (
     UserListAPIView,
     UserRetrieveAPIView,
     UserUpdateAPIView,
-    MyTokenObtainPairView,
+    MyTokenObtainPairView, PaymentsCreateAPIView,
 )
 
 app_name = UsersConfig.name
