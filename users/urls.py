@@ -4,6 +4,7 @@ from rest_framework_simplejwt.views import TokenRefreshView
 
 from users.apps import UsersConfig
 from users.views import (
+    PaymentsCreateAPIView,
     PaymentsListAPIView,
     UserCreateAPIView,
     UserDestroyAPIView,
