@@ -20,19 +20,16 @@ ALLOWED_HOSTS = [
     if host.strip()
 ]
 
-if (
-        not os.getenv("POSTGRES_DB")
-        or not os.getenv("POSTGRES_PASSWORD")
-        or not os.getenv("POSTGRES_USER")
-):
-    raise RuntimeError("Переменные окружения POSTGRES_DB не заданы")
+POSTGRES_DB = os.environ['POSTGRES_DB']
+POSTGRES_USER = os.environ['POSTGRES_USER']
+POSTGRES_PASSWORD = os.environ['POSTGRES_PASSWORD']
 
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.getenv("POSTGRES_DB"),
-        "USER": os.getenv("POSTGRES_USER"),
-        "PASSWORD": os.getenv("POSTGRES_PASSWORD"),
+        "NAME": POSTGRES_DB,  # было os.getenv("POSTGRES_DB")
+        "USER": POSTGRES_USER,  # было os.getenv("POSTGRES_USER")
+        "PASSWORD": POSTGRES_PASSWORD,  # было os.getenv("POSTGRES_PASSWORD")
         "HOST": os.getenv("POSTGRES_HOST", "localhost"),
         "PORT": os.getenv("POSTGRES_PORT", "5432"),
         "OPTIONS": {

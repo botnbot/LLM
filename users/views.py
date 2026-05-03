@@ -18,6 +18,7 @@ from users.serializers import (
     UserSerializer,
     MyTokenObtainPairSerializer,
 )
+from users.service import create_stripe_session, create_stripe_price
 
 
 #  CRUD пользователей
