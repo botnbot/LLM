@@ -2,26 +2,26 @@ FROM python:3.12-slim
 
 WORKDIR /code
 
-# Установка системных зависимостей
 RUN apt-get update && apt-get install -y \
     gcc \
     libpq-dev \
+    libmagic1 \
     && rm -rf /var/lib/apt/lists/*
 
-# Установка poetry
-RUN pip install poetry
+# Копируем requirements.txt
+COPY requirements.txt .
 
-# Копирование файлов зависимостей
-COPY pyproject.toml poetry.lock ./
+# Устанавливаем зависимости с увеличенным таймаутом
+RUN pip install --no-cache-dir --default-timeout=100 -r requirements.txt
 
-# Установка зависимостей
-RUN poetry config virtualenvs.create false && \
-    poetry install --no-interaction --no-ansi --no-root
-
-# Копирование проекта
 COPY . .
 
-# Открываем порт
+RUN mkdir -p /code/static /code/media
+
 EXPOSE 8000
 
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+RUN addgroup --system django && \
+    adduser --system --ingroup django django && \
+    chown -R django:django /code
+
+USER django
