@@ -144,7 +144,29 @@ python manage.py createsuperuser
 ```bash
 python manage.py create_groups
 ```
-### 9. Заполнение тестовыми данными (опционально)
+### 9. Заполнение тестовыми данными
 ```bash
 python manage.py create_payments
+```
+### 10.  Запуск через Docker Compose
+
+#### Предварительные требования
+- Установленный Docker Desktop
+- 4+ GB свободной RAM
+
+
+### Быстрый запуск
+```bash
+# Клонировать репозиторий
+git clone  https://github.com/botnbot/LLM.git
+cd LLM
+
+# Настроить .env файл (скопировать из .env_sample)
+cp .env_sample .env
+
+# Запустить все сервисы
+docker-compose up --build
+
+# В другом терминале создать суперпользователя
+docker-compose exec web python manage.py createsuperuser
 ```
