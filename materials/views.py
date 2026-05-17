@@ -1,3 +1,8 @@
+from datetime import timedelta
+from django.utils import timezone
+
+from users.tasks import notify_course_subscribers
+
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets
@@ -11,8 +16,6 @@ from rest_framework.generics import (
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework.filters import OrderingFilter
 
 from materials.models import Course, Lesson
 from materials.paginators import StandardResultsSetPagination
@@ -23,6 +26,7 @@ from materials.serializers import (
 )
 from users.models import Subscription
 from users.permissions import IsModeratorOrOwner
+
 
 # Lesson ViewSet
 
@@ -97,6 +101,27 @@ class CourseUpdateAPIView(UpdateAPIView):
     queryset = Course.objects.all()
     serializer_class = CourseSerializer
     permission_classes = [IsAuthenticated, IsModeratorOrOwner]
+
+    def perform_update(self, serializer):
+        # Получаем старую версию курса до обновления
+        old_course = self.get_object()
+        old_updated_at = old_course.updated_at
+
+        # Обновляем курс
+        course = serializer.save()
+
+        # Проверяем, когда было последнее обновление
+        should_notify = True
+
+        # Дополнительное задание: уведомлять только если курс не обновлялся более 4 часов
+        if old_updated_at:
+            time_since_last_update = timezone.now() - old_updated_at
+            if time_since_last_update < timedelta(hours=4):
+                should_notify = False
+
+        # Отправляем уведомления подписчикам
+        if should_notify:
+            notify_course_subscribers.delay(course.id, course.name)
 
 
 class CourseDestroyAPIView(DestroyAPIView):
