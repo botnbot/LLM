@@ -1,0 +1,59 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Create .env from secrets
+        run: |
+          cat << EOF > .env.production
+          ENV_NAME=production
+          SECRET_KEY=${{ secrets.SECRET_KEY }}
+          DEBUG=${{ secrets.DEBUG }}
+          DEPLOY_HOST=${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER=${{ secrets.DEPLOY_USER }}
+          ALLOWED_HOSTS=${{ secrets.ALLOWED_HOSTS }}
+          POSTGRES_DB=${{ secrets.POSTGRES_DB }}
+          POSTGRES_USER=${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
+          POSTGRES_HOST=${{ secrets.POSTGRES_HOST }}
+          POSTGRES_PORT=${{ secrets.POSTGRES_PORT }}
+          REDIS_HOST=${{ secrets.REDIS_HOST }}
+          REDIS_PORT=${{ secrets.REDIS_PORT }}
+          REDIS_DB=${{ secrets.REDIS_DB }}
+          EMAIL_HOST=${{ secrets.EMAIL_HOST }}
+          EMAIL_PORT=${{ secrets.EMAIL_PORT }}
+          EMAIL_USE_TLS=${{ secrets.EMAIL_USE_TLS }}
+          EMAIL_HOST_USER=${{ secrets.EMAIL_HOST_USER }}
+          EMAIL_HOST_PASSWORD=${{ secrets.EMAIL_HOST_PASSWORD }}
+          DEFAULT_FROM_EMAIL=${{ secrets.DEFAULT_FROM_EMAIL }}
+          STRIPE_API_KEY=${{ secrets.STRIPE_API_KEY }}
+          SECRET_KEY=${{ secrets.SECRET_KEY }}
+          SERVER_HOST=${{ secrets.SERVER_HOST }}
+          SERVER_PASSWORD=${{ secrets.SERVER_PASSWORD }}
+          SERVER_USER=${{ secrets.SERVER_USER }}
+          EOF
+
+      - name: Setup SSH key
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Deploy with Docker Compose
+        run: |
+          ssh -o StrictHostKeyChecking=no ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} << 'EOF'
+            cd ~/llm-app
+            git pull origin main
+            cp /tmp/.env.production .env
+            docker compose down
+            docker compose up -d --build
+            docker system prune -f
+          EOF
