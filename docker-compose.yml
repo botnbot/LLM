@@ -39,12 +39,24 @@ services:
       - llm_network
 
   web:
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
     build: .
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8000/health/" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
     container_name: llm_web
     command: >
       sh -c "python manage.py migrate &&
-             python manage.py create_groups &&
-             python manage.py runserver 0.0.0.0:8000"
+            python manage.py create_groups &&
+            python manage.py collectstatic --noinput &&
+            gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 4 --threads 2"
     env_file:
       - .env
     environment:
@@ -64,7 +76,20 @@ services:
     restart: unless-stopped
     networks:
       - llm_network
-
+  nginx:
+    image: nginx:alpine
+    container_name: llm_nginx
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+      - static_volume:/code/static
+      - media_volume:/code/media
+    ports:
+      - "80:80"
+    depends_on:
+      - web
+    networks:
+      - llm_network
+      -
   celery:
     build: .
     container_name: llm_celery
@@ -74,6 +99,8 @@ services:
     environment:
       POSTGRES_HOST: db
       REDIS_HOST: redis
+      CELERY_WORKER_CONCURRENCY: ${CELERY_WORKER_CONCURRENCY:-2}
+      CELERY_LOG_LEVEL: ${CELERY_LOG_LEVEL:-info}
     volumes:
       - .:/code
     depends_on:
