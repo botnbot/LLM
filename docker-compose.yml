@@ -80,7 +80,7 @@ services:
     image: nginx:alpine
     container_name: llm_nginx
     volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
       - static_volume:/code/static
       - media_volume:/code/media
     ports:
@@ -89,7 +89,7 @@ services:
       - web
     networks:
       - llm_network
-      -
+    restart: unless-stopped
   celery:
     build: .
     container_name: llm_celery
