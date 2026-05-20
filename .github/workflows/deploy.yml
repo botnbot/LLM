@@ -36,7 +36,6 @@ jobs:
           EMAIL_HOST_PASSWORD=${{ secrets.EMAIL_HOST_PASSWORD }}
           DEFAULT_FROM_EMAIL=${{ secrets.DEFAULT_FROM_EMAIL }}
           STRIPE_API_KEY=${{ secrets.STRIPE_API_KEY }}
-          SECRET_KEY=${{ secrets.SECRET_KEY }}
           SERVER_HOST=${{ secrets.SERVER_HOST }}
           SERVER_PASSWORD=${{ secrets.SERVER_PASSWORD }}
           SERVER_USER=${{ secrets.SERVER_USER }}
@@ -49,10 +48,10 @@ jobs:
 
       - name: Deploy with Docker Compose
         run: |
-          ssh -o StrictHostKeyChecking=no -p 443 ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} << 'EOF'
+          ssh -o StrictHostKeyChecking=no -p 22 ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} << 'EOF'
             cd ~/llm-app
             git pull origin main
-            cp /tmp/.env.production .env
+            cp .env.production .env
             docker compose down
             docker compose up -d --build
             docker system prune -f
