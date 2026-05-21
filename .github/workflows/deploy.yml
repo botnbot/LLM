@@ -41,6 +41,10 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
+      - name: Create directory on server
+        run: |
+          ssh -o StrictHostKeyChecking=no -p 22 ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} "mkdir -p ~/llm-app"
+
       - name: Copy .env to server
         run: |
           scp -P 22 -o StrictHostKeyChecking=no .env.production ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:~/llm-app/.env
