@@ -43,7 +43,7 @@ jobs:
 
       - name: Copy .env to server
         run: |
-          scp -P 443 -o StrictHostKeyChecking=no .env.production ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:~/llm-app/.env
+          scp -P 22 -o StrictHostKeyChecking=no .env.production ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:~/llm-app/.env
 
       - name: Deploy with Docker Compose
         run: |
