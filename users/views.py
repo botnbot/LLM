@@ -1,4 +1,5 @@
 from django.contrib.auth.hashers import make_password
+from django.http import Http404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import OrderingFilter
 from rest_framework.generics import (
@@ -6,7 +7,7 @@ from rest_framework.generics import (
     DestroyAPIView,
     ListAPIView,
     RetrieveAPIView,
-    UpdateAPIView,
+    UpdateAPIView, get_object_or_404,
 )
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework_simplejwt.views import TokenObtainPairView
@@ -35,7 +36,10 @@ class UserListAPIView(ListAPIView):
 class UserRetrieveAPIView(RetrieveAPIView):
     serializer_class = UserSerializer
     permission_classes = [IsAuthenticated, IsOwner]
-    queryset = User.objects.all()
+
+    def get_queryset(self):
+        # Пользователь видит только себя
+        return User.objects.filter(pk=self.request.user.pk)
 
 
 class UserUpdateAPIView(UpdateAPIView):
@@ -43,11 +47,25 @@ class UserUpdateAPIView(UpdateAPIView):
     permission_classes = [IsAuthenticated, IsOwner]
     queryset = User.objects.all()
 
+    def get_object(self):
+        # Возвращает 404, если пользователь пытается получить чужой профиль
+        obj = get_object_or_404(User, pk=self.kwargs['pk'])
+        if obj != self.request.user:
+            raise Http404
+        return obj
+
 
 class UserDestroyAPIView(DestroyAPIView):
     serializer_class = UserSerializer
     permission_classes = [IsAuthenticated, IsOwner]
     queryset = User.objects.all()
+
+    def get_object(self):
+        # Возвращает 404, если пользователь пытается получить чужой профиль
+        obj = get_object_or_404(User, pk=self.kwargs['pk'])
+        if obj != self.request.user:
+            raise Http404
+        return obj
 
 
 #  Регистрация пользователя

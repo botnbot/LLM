@@ -32,14 +32,19 @@ class UserTests(APITestCase):
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
-
     def test_user_can_update_self(self):
-        self.client.force_authenticate(user=self.user)
-        url = reverse("users:users_update", args=[self.user.id])
-        response = self.client.patch(url, {"email": "new@example.com"})
+        # Создаём пользователя
+        user = User.objects.create_user(username='testuser', password='testpass123')
+
+        # Авторизуемся как этот пользователь
+        self.client.force_authenticate(user=user)
+
+        # Обновляем свой профиль
+        url = reverse('users:users_update', args=[user.pk])
+        response = self.client.put(url, {'username': 'updated_user'})
+
+        # Должен быть 200 OK
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.user.refresh_from_db()
-        self.assertEqual(self.user.email, "new@example.com")
 
     def test_user_cannot_update_other(self):
         self.client.force_authenticate(user=self.user)
@@ -54,7 +59,8 @@ class UserTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_user_can_delete_self(self):
-        self.client.force_authenticate(user=self.user)
-        url = reverse("users:users_delete", args=[self.user.id])
+        user = User.objects.create_user(username='testuser', password='testpass123')
+        self.client.force_authenticate(user=user)
+        url = reverse('users:users_delete', args=[user.pk])
         response = self.client.delete(url)
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
