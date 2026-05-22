@@ -34,7 +34,9 @@ class UserTests(APITestCase):
 
     def test_user_can_update_self(self):
         # Создаём пользователя
-        user = User.objects.create_user(username='testuser', password='testpass123')
+        user = User.objects.create_user(username='testuser',
+                                        email='testuser@example.com',
+                                        password='testpass123')
 
         # Авторизуемся как этот пользователь
         self.client.force_authenticate(user=user)
@@ -59,7 +61,9 @@ class UserTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_user_can_delete_self(self):
-        user = User.objects.create_user(username='testuser', password='testpass123')
+        user = User.objects.create_user(username='testuser',
+                                        email='testuser@example.com',
+                                        password='testpass123')
         self.client.force_authenticate(user=user)
         url = reverse('users:users_delete', args=[user.pk])
         response = self.client.delete(url)
