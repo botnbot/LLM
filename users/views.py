@@ -35,10 +35,9 @@ class UserListAPIView(ListAPIView):
 
 class UserRetrieveAPIView(RetrieveAPIView):
     serializer_class = UserSerializer
-    permission_classes = [IsAuthenticated, IsOwner]
+    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        # Пользователь видит только себя
         return User.objects.filter(pk=self.request.user.pk)
 
 
