@@ -35,25 +35,19 @@ class UserListAPIView(ListAPIView):
 class UserRetrieveAPIView(RetrieveAPIView):
     serializer_class = UserSerializer
     permission_classes = [IsAuthenticated, IsOwner]
-
-    def get_queryset(self):
-        return User.objects.filter(id=self.request.user.id)
+    queryset = User.objects.all()
 
 
 class UserUpdateAPIView(UpdateAPIView):
     serializer_class = UserSerializer
     permission_classes = [IsAuthenticated, IsOwner]
-
-    def get_queryset(self):
-        return User.objects.filter(id=self.request.user.id)
+    queryset = User.objects.all()
 
 
 class UserDestroyAPIView(DestroyAPIView):
     serializer_class = UserSerializer
     permission_classes = [IsAuthenticated, IsOwner]
-
-    def get_queryset(self):
-        return User.objects.filter(id=self.request.user.id)
+    queryset = User.objects.all()
 
 
 #  Регистрация пользователя
