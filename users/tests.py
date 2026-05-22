@@ -34,13 +34,13 @@ class UserTests(APITestCase):
 
     def test_user_can_update_self(self):
         user = User.objects.create_user(
-                                        email='testuser@example.com',
-                                        password='testpass123'
+            email='testuser@example.com',
+            password='testpass123'
         )
 
         self.client.force_authenticate(user=user)
         url = reverse('users:users_update', args=[user.pk])
-        response = self.client.put(url, {'email': 'updated@example.com'})
+        response = self.client.patch(url, {'city': 'Vologda'})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_user_cannot_update_other(self):
