@@ -44,7 +44,7 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
-    build: .
+    image: skoro55/llm:latest
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:8000/health/" ]
       interval: 30s
