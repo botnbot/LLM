@@ -107,20 +107,17 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-      - name: Create directory on server
-        run: |
-          ssh -o StrictHostKeyChecking=no -p 22 ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} "mkdir -p ~/llm-app"
-
-      - name: Copy .env to server
-        run: |
-          scp -P 22 -o StrictHostKeyChecking=no .env.production ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:~/llm-app/.env
-
       - name: Deploy with Docker Compose
         run: |
           ssh -o StrictHostKeyChecking=no -p 22 ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} << 'EOF'
-            cd ~/llm-app
-            echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-            git pull
+            cd ~
+            if [ ! -d "llm-app/.git" ]; then
+              rm -rf llm-app
+              git clone https://github.com/botnbot/LLM.git llm-app
+            fi
+            cd llm-app
+            git pull origin main
+            docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
             docker compose pull
             docker compose down
             docker compose up -d
