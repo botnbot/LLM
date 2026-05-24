@@ -120,8 +120,10 @@ Workflow этапы
 test	Запуск тестов, линтеров, Django checks
 build	Сборка Docker образа и пуш в Docker Hub
 deploy	Деплой на удаленный сервер через SSH
-GitHub Secrets
- ## Для работы CI/CD необходимо настроить следующие секреты:
+
+ ### GitHub Secrets
+
+ #### Для работы CI/CD необходимо настроить следующие секреты:
 
 Secret	Описание
 SECRET_KEY	Django secret key
@@ -166,24 +168,9 @@ CREATE DATABASE llm_db;
 CREATE USER postgres WITH PASSWORD 'postgres';
 GRANT ALL PRIVILEGES ON DATABASE llm_db TO postgres;
 4. Настройка переменных окружения
-Создайте файл .env в корне проекта (скопируйте из .env_sample):
+Создайте файл .env в корне проекта (скопируйте из .env_sample и заполните)
 
-env
-DEBUG=True
-SECRET_KEY=your-secret-key-here
-ALLOWED_HOSTS=127.0.0.1,localhost
 
-POSTGRES_DB=llm_db
-POSTGRES_USER=postgres
-POSTGRES_PASSWORD=postgres
-POSTGRES_HOST=127.0.0.1
-POSTGRES_PORT=5432
-
-REDIS_HOST=127.0.0.1
-REDIS_PORT=6379
-REDIS_DB=0
-
-STRIPE_API_KEY=your-stripe-api-key
 5. Настройка Redis
 Windows (через WSL):
 
