@@ -121,7 +121,7 @@ test	Запуск тестов, линтеров, Django checks
 build	Сборка Docker образа и пуш в Docker Hub
 deploy	Деплой на удаленный сервер через SSH
 GitHub Secrets
-Для работы CI/CD необходимо настроить следующие секреты:
+ ## Для работы CI/CD необходимо настроить следующие секреты:
 
 Secret	Описание
 SECRET_KEY	Django secret key
