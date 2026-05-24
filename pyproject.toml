@@ -20,6 +20,7 @@ eventlet = "0.41.0"
 redis = "^7.4.0"
 stripe = "15.0.0"
 python-crontab = {version = "3.3.0", optional = true}
+psycopg2-binary = "^2.9"
 
 [tool.poetry.group.dev.dependencies]
 django-extensions = "^4.0"
