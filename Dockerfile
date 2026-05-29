@@ -1,68 +1,45 @@
-FROM python:3.12-slim AS builder
+FROM python:3.11-slim as builder
 
-ARG POETRY_VERSION=1.8.3
+WORKDIR /app
 
-ENV \
-    POETRY_VIRTUALENVS_CREATE=false \
-    POETRY_NO_INTERACTION=1 \
-    POETRY_HOME=/opt/poetry
-
-# Установка системных зависимостей для сборки
+# Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     libpq-dev \
-    libmagic1 \
     curl \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* \
-    && rm -rf /tmp/* /var/tmp/*
+    && rm -rf /var/lib/apt/lists/*
 
-# Установка Poetry
-RUN curl -sSL https://install.python-poetry.org | python3 - && \
-    ln -s /opt/poetry/bin/poetry /usr/local/bin/poetry
+# Install Python dependencies
+COPY requirements.txt .
+RUN pip install --user --no-cache-dir -r requirements.txt
+
+# Final stage
+FROM python:3.11-slim
 
 WORKDIR /code
 
-# Копирование только файлов зависимостей (для кэширования)
-COPY pyproject.toml poetry.lock ./
+# Copy Python dependencies from builder
+COPY --from=builder /root/.local /root/.local
 
-RUN poetry install --only main --no-root --no-interaction --no-ansi
-
-COPY . .
-
-RUN poetry install --only main --no-interaction --no-ansi
-
-# Очистка кэша Poetry
-RUN rm -rf /root/.cache/pypoetry
-
-FROM python:3.12-slim
-
+# Install runtime system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libpq-dev \
-    libmagic1 \
     curl \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* \
-    && rm -rf /tmp/* /var/tmp/*
+    && rm -rf /var/lib/apt/lists/*
 
-WORKDIR /code
+# Make sure scripts in .local are usable
+ENV PATH=/root/.local/bin:$PATH
 
-# Копирование установленных Python пакетов из builder
-COPY --from=builder /usr/local/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages
-COPY --from=builder /usr/local/bin /usr/local/bin
+# Copy application
+COPY . .
 
-# Копирование кода приложения
-COPY --from=builder /code /code
+# Create non-root user
+RUN addgroup --system app && adduser --system --group app
+RUN chown -R app:app /code
+USER app
 
-# Создание пользователя и директорий (только один раз!)
-RUN groupadd --system django && \
-    useradd --system --gid django django && \
-    mkdir -p /code/static /code/media /code/logs && \
-    chown -R django:django /code
-
-EXPOSE 8000
-
-USER django
-
+# Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
     CMD curl -f http://localhost:8000/health/ || exit 1
+
+EXPOSE 8000
