@@ -64,7 +64,6 @@ services:
       POSTGRES_HOST: db
       REDIS_HOST: redis
     volumes:
-      - .:/code
       - static_volume:/code/static
       - media_volume:/code/media
     ports:
