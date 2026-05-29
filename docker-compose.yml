@@ -20,7 +20,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 10s
+      start_period: 30s
     restart: unless-stopped
     networks:
       - llm_network
@@ -30,6 +30,11 @@ services:
           memory: 512M
         reservations:
           memory: 256M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   redis:
     image: redis:7-alpine
@@ -44,6 +49,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 10s
     restart: unless-stopped
     networks:
       - llm_network
@@ -53,6 +59,11 @@ services:
           memory: 256M
         reservations:
           memory: 128M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   web:
     image: skoro55/llm:latest
@@ -89,21 +100,21 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 40s
+      start_period: 60s  # Django может дольше стартовать
     restart: unless-stopped
     networks:
       - llm_network
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
     deploy:
       resources:
         limits:
           memory: 1G
         reservations:
           memory: 512M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"  # Больше логов для web
 
   nginx:
     image: nginx:alpine
@@ -114,17 +125,27 @@ services:
       - media_volume:/code/media:ro
     ports:
       - "80:80"
-      - "443:443"  # Если используется HTTPS
+      - "443:443"
     depends_on:
-      - web
+      web:
+        condition: service_healthy  # Ждем здоровый web
     healthcheck:
-      test: ["CMD", "nginx", "-t"]
+      test: ["CMD", "nginx", "-t"]  # Проверяем конфигурацию
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 10s
+      # Альтернативный тест с curl:
+      # test: ["CMD", "curl", "-f", "http://localhost/health/"]
     restart: unless-stopped
     networks:
       - llm_network
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+        reservations:
+          memory: 64M
     logging:
       driver: "json-file"
       options:
@@ -152,20 +173,28 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+    healthcheck:
+      test: >
+        ["CMD-SHELL", 
+        "celery -A config inspect ping -d celery@$$HOSTNAME || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
     restart: unless-stopped
     networks:
       - llm_network
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
     deploy:
       resources:
         limits:
           memory: 1G
         reservations:
           memory: 512M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   celery-beat:
     image: skoro55/llm:latest
@@ -185,9 +214,25 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      celery:
+        condition: service_healthy  # Ждем здоровый celery worker
+    healthcheck:
+      test: >
+        ["CMD-SHELL", 
+        "celery -A config inspect ping -d celery@$$HOSTNAME || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
     restart: unless-stopped
     networks:
       - llm_network
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+        reservations:
+          memory: 128M
     logging:
       driver: "json-file"
       options:
@@ -200,17 +245,38 @@ services:
     container_name: llm_flower
     command: >
       celery --broker=redis://redis:6379/0 flower 
-      --port=5555 --basic_auth=${FLOWER_USER:-admin}:${FLOWER_PASSWORD:-admin}
+      --port=5555 
+      --basic_auth=${FLOWER_USER:-admin}:${FLOWER_PASSWORD:-admin}
+      --url_prefix=flower
     ports:
       - "5555:5555"
     environment:
       REDIS_HOST: redis
     depends_on:
-      - redis
-      - celery
+      redis:
+        condition: service_healthy
+      celery:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5555"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
     restart: unless-stopped
     networks:
       - llm_network
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+        reservations:
+          memory: 128M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
     profiles:
       - monitoring
 
@@ -230,4 +296,4 @@ networks:
     driver: bridge
     ipam:
       config:
-        - subnet: 172.20.0.0/16  # Фиксированная подсеть для предсказуемости
+        - subnet: 172.20.0.0/16
