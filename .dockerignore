@@ -1,22 +1,107 @@
+# Version control
 .git
+.gitignore
+.gitattributes
+.github
+
+# Python
 __pycache__
-*.pyc
-*.pyo
-*.pyd
-.Python
+*.py[cod]
+*$py.class
 *.so
+.Python
 *.egg
 *.egg-info
 dist
 build
+*.pyc
+*.pyo
+*.pyd
+*.pyi
+
+# Environment files (ВАЖНО: защита секретов)
+.env
+.env.*
+!.env.example
 .env.local
 .env.*.local
+.env.production
+.env.staging
+
+# IDE and editors
+.vscode
+.idea
+*.swp
+*.swo
+*~
+.DS_Store
+*.code-workspace
+
+# Logs and databases
 *.log
 *.db
 *.sqlite3
+*.sqlite3-journal
+logs/
+*.log.*
+
+# Testing
 .coverage
 htmlcov
 .pytest_cache
+.tox
+.mypy_cache
+.ruff_cache
+*.cover
+.coverage.*
+
+# Docker
 .dockerignore
 Dockerfile
+Dockerfile.*
 docker-compose*.yml
+.docker
+
+# Project specific
+static/
+staticfiles/
+media/
+mediafiles/
+uploads/
+*.pid
+celerybeat-schedule
+celerybeat.pid
+*.stripe
+*.pem
+*.key
+*.crt
+*.p12
+secrets/
+secret_key.txt
+
+# Documentation
+docs/
+*.md
+!.github/*.md
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.backup
+*.cache
+
+# OS files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Node modules (if any)
+node_modules/
+package-lock.json
+yarn.lock
+
+# Backup files
+*.backup
+*.old
+*.orig
