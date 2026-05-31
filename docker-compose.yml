@@ -65,6 +65,7 @@ services:
         max-file: "3"
 
   web:
+    user: root
     image: skoro55/llm:latest
     container_name: llm_web
     command: >
@@ -150,6 +151,7 @@ services:
         max-file: "3"
 
   celery:
+    user: root
     image: skoro55/llm:latest
     container_name: llm_celery
     command: >
@@ -192,6 +194,7 @@ services:
         max-file: "3"
 
   celery-beat:
+    user: root
     image: skoro55/llm:latest
     container_name: llm_celery_beat
     command: >
