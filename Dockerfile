@@ -1,6 +1,6 @@
 FROM python:3.11-slim as builder
 
-WORKDIR /app
+WORKDIR /code
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -18,17 +18,15 @@ FROM python:3.11-slim
 
 WORKDIR /code
 
-# Copy Python dependencies from builder
-COPY --from=builder /root/.local /root/.local
-
 # Install runtime system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libpq-dev \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Make sure scripts in .local are usable
-ENV PATH=/root/.local/bin:$PATH
+# Copy Python dependencies from builder (system-wide)
+COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
+COPY --from=builder /usr/local/bin /usr/local/bin
 
 # Copy application
 COPY . .
@@ -36,6 +34,10 @@ COPY . .
 # Create non-root user
 RUN addgroup --system app && adduser --system --group app
 RUN chown -R app:app /code
+
+# СОЗДАЁМ ДИРЕКТОРИЮ ДЛЯ ЛОГОВ И ДАЁМ ПРАВА
+RUN mkdir -p /var/log/django && chmod 755 /var/log/django
+
 USER app
 
 # Health check
