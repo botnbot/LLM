@@ -87,6 +87,10 @@ services:
       REDIS_HOST: redis
       DJANGO_SETTINGS_MODULE: config.settings.production
       SECURE_SSL_REDIRECT: "False"
+      SECURE_PROXY_SSL_HEADER: ""
+      SESSION_COOKIE_SECURE: "False"
+      CSRF_COOKIE_SECURE: "False"
+      ALLOWED_HOSTS: "localhost,127.0.0.1,web"
     volumes:
       - static_volume:/code/static
       - media_volume:/code/media

@@ -19,7 +19,7 @@ build
 *.pyd
 *.pyi
 
-# Environment files (ВАЖНО: защита секретов)
+# Environment files
 .env
 .env.*
 !.env.example
