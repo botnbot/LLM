@@ -65,6 +65,9 @@ services:
         max-file: "3"
 
   web:
+    build: .
+    env_file:
+      - .env
     user: root
     image: skoro55/llm:latest
     container_name: llm_web
