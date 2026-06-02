@@ -66,72 +66,96 @@
 - 4+ GB свободной RAM
 - WSL2 (для Windows) или Linux/MacOS
 
-### Быстрый запуск (локальная разработка)
+# Быстрый запуск (локальная разработка)
 
+
+#### Клонировать репозиторий
 ```bash
-# Клонировать репозиторий
 git clone https://github.com/botnbot/LLM.git
 cd LLM
-
-# Настроить .env файл для локальной разработки
+```
+#### Настроить .env файл для локальной разработки
+```bash
 cp .env_sample .env.local
+```
 
-# Отредактируйте .env.local - добавьте реальные значения
+#### Отредактировать .env.local - добавить реальные значения
 
-# Запустить все сервисы в режиме разработки
+#### Запустить все сервисы в режиме разработки
+```bash
 docker compose -f docker-compose.yml -f docker-compose.local.yml up -d
-
-# Применить миграции
+```
+#### Применить миграции
+```bash
 docker compose -f docker-compose.yml -f docker-compose.local.yml exec web python manage.py migrate
-
-# Создать суперпользователя
+```
+#### Создать суперпользователя
+```bash
 docker compose -f docker-compose.yml -f docker-compose.local.yml exec web python manage.py createsuperuser
-
-# Создать группы доступа
+```
+#### Создать группы доступа
+```bash
 docker compose -f docker-compose.yml -f docker-compose.local.yml exec web python manage.py create_groups
-Запуск в production режиме
-bash
-# Настроить production .env файл
+```
+# Запуск в production режиме
+
+#### Настроить production .env файл
+```bash
 cp .env_sample .env
+```
 
-# Заполните все production переменные
+#### Заполнить все production переменные
 
-# Запустить production конфигурацию (явно указываем prod файл)
+#### Запустить production конфигурацию (явно указываем prod файл)
+```bash
 docker compose -f docker-compose.prod.yml up -d
+```
 
-# Выполнить миграции
+#### Выполнить миграции
+```bash
 docker compose -f docker-compose.prod.yml exec web python manage.py migrate
+```
 
-# Собрать статику
+#### Собрать статику
+```bash
 docker compose -f docker-compose.prod.yml exec web python manage.py collectstatic
-Проверка работы
-bash
-# Проверить статус контейнеров
+```
+
+#### Проверить статус контейнеров
+```
 docker compose -f docker-compose.yml -f docker-compose.local.yml ps
-
-# Посмотреть логи всех сервисов
+```
+#### Посмотреть логи всех сервисов
+```
 docker compose -f docker-compose.yml -f docker-compose.local.yml logs -f
+```
 
-# Посмотреть логи конкретного сервиса
+#### Посмотреть логи конкретного сервиса
+```
 docker compose -f docker-compose.yml -f docker-compose.local.yml logs web --tail=50
-
-# Health check
+```
+#### Health check
+```
 curl http://localhost:8000/health/
-Доступ к приложению
-Сервис	Локальный URL	Production URL
-Swagger документация	http://localhost:8000/swagger/	http://176.109.109.156:8000/swagger/
-ReDoc	http://localhost:8000/redoc/	http://176.109.109.156:8000/redoc/
-Админ-панель	http://localhost:8000/admin/	http://176.109.109.156:8000/admin/
-Health check	http://localhost:8000/health/	http://176.109.109.156:8000/health/
-Через Nginx	http://localhost	http://176.109.109.156
-Важные особенности Docker конфигурации
-Файл	Назначение	Когда использовать
-docker-compose.yml	Базовая конфигурация для всех окружений	Всегда
-docker-compose.local.yml	Override для разработки (hot-reload, debug tools)	Только локально: -f docker-compose.local.yml
-docker-compose.prod.yml	Production конфигурация (gunicorn, без debug)	На сервере: -f docker-compose.prod.yml
-⚠️ Важно:
+```
+## Доступ к приложению
 
-❌ НЕ используйте docker-compose.override.yml - он автоматически применяется и может вызвать проблемы
+| Сервис | Локальный URL | Production URL |
+|--------|---------------|----------------|
+| Swagger документация | `http://localhost:8000/swagger/` | `http://176.109.109.156:8000/swagger/` |
+| ReDoc | `http://localhost:8000/redoc/` | `http://176.109.109.156:8000/redoc/` |
+| Админ-панель | `http://localhost:8000/admin/` | `http://176.109.109.156:8000/admin/` |
+| Health check | `http://localhost:8000/health/` | `http://176.109.109.156:8000/health/` |
+| Через Nginx | `http://localhost` | `http://176.109.109.156` |
+Важные особенности Docker конфигурации
+## Файлы Docker Compose
+
+| Файл | Назначение | Когда использовать |
+|------|------------|---------------------|
+| `docker-compose.yml` | Базовая конфигурация для всех окружений | Всегда |
+| `docker-compose.local.yml` | Override для разработки (hot-reload, debug tools) | Только локально: `-f docker-compose.local.yml` |
+| `docker-compose.prod.yml` | Production конфигурация (gunicorn, без debug) | На сервере: `-f docker-compose.prod.yml` |
+> **⚠️ Важно:** 
 
 ✅ Всегда явно указывайте нужный compose файл с флагом -f
 
@@ -354,67 +378,7 @@ docker system prune -a -f
 docker volume prune -f
 docker-compose.override.yml случайно применился
 bash
-# Удалить override файл если он существует
-rm docker-compose.override.yml
 
-# Или всегда явно указывать compose файлы
-docker compose -f docker-compose.yml -f docker-compose.local.yml up
-🔐 Безопасность
-Принятые меры:
-Все секреты хранятся в GitHub Secrets
-
-.env файл исключён из репозитория (в .gitignore)
-
-DEBUG=False в production
-
-ALLOWED_HOSTS настроен для production сервера
-
-SSH ключи используются для безопасного деплоя
-
-JWT токены для аутентификации
-
-CORS настроен для разрешенных доменов
-
-SSL/TLS (планируется для домена)
-
-Регулярные обновления зависимостей
-
-Рекомендации:
-bash
-# Регулярно обновляйте зависимости
-poetry update
-
-# Проверяйте уязвимости
-poetry run safety check
-
-# Используйте надежные пароли
-openssl rand -base64 32
-
-# Включайте двухфакторную аутентификацию в GitHub
-📄 Лицензия
-BSD License. Подробнее в файле LICENSE.
-
-👥 Контакты
-Разработчик: @botnbot
-
-Проект: LLM on GitHub
-
-Production: http://176.109.109.156
-
-## Основные исправления разметки:
-
-1. **✅ Закрыты все блоки кода** - каждый блок начинается с ` ```bash ` и заканчивается ` ``` `
-2. **✅ Исправлены незакрытые строки** - команды теперь внутри блоков кода
-3. **✅ Убраны лишние пробелы** перед блоками кода
-4. **✅ Исправлены SQL блоки** - использован `sql` вместо `bash`
-5. **✅ EOF исправлен** - в heredoc используется `'EOF'` для предотвращения интерполяции
-6. **✅ Вложенные списки** - исправлены отступы
-7. **✅ Таблицы** - все таблицы правильно отформатированы
-8. **✅ Эмодзи** - оставлены, но проверены на совместимость
-
-Теперь markdown разметка полностью корректна и README будет правильно отображаться на GitHub!
-This response is AI-generated, for reference only.
-C:\Projects\LLM\README.md
 LLM Project - Django приложение для онлайн-обучения
 Проект представляет собой платформу для онлайн-обучения на основе Django REST API для управления курсами и уроками с функционалом подписок, платежей через Stripe, асинхронных задач через Celery и периодических задач через Celery Beat.
 
