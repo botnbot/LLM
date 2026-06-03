@@ -4,15 +4,16 @@
 import os
 import sys
 
-# Получаем текущее окружение (по умолчанию local)
-ENVIRONMENT = os.environ.get("ENV_NAME", "local")
+_ENV = os.environ.get("ENV_NAME", "local")
 
-# Загрузка соответствующих настроек
-if ENVIRONMENT == "production":
+VALID_ENVIRONMENTS = ["local", "production"]
+if _ENV not in VALID_ENVIRONMENTS:
+    raise ValueError(f"Неизвестное окружение: {_ENV}. Допустимые значения: {VALID_ENVIRONMENTS}")
+
+if _ENV == "production":
     from .production import *
 else:
     from .local import *
 
-# Вывод информации о загруженном окружении
-if 'runserver' in sys.argv or 'migrate' in sys.argv:
-    print(f"Загружены настройки для окружения: {ENVIRONMENT}")
+if 'runserver' in sys.argv or 'gunicorn' in sys.argv[0]:
+    print(f"🚀 {_ENV.upper()} mode")
