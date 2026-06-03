@@ -18,7 +18,7 @@ jobs:
           POSTGRES_PASSWORD: test_pass
           POSTGRES_DB: test_db
         options: >-
-          --health-cmd pg_is_ready
+          --health-cmd pg_isready
           --health-interval 10s
           --timeout 5s
           --retries 5
@@ -45,14 +45,12 @@ jobs:
         sed -i 's/DEBUG=1/DEBUG=0/' .env
         sed -i 's|DATABASE_URL=.*|DATABASE_URL=postgresql://test_user:test_pass@localhost:5432/test_db|' .env
         sed -i 's/SECRET_KEY=.*/SECRET_KEY=ci-test-secret-key/' .env
-        
 
     - name: Lint with flake8
       run: flake8 . --count --show-source --statistics --max-line-length=120
 
     - name: Run tests with coverage
-      run: |
-        pytest --cov=. --cov-report=xml
+      run: pytest --cov=. --cov-report=xml
 
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v4
@@ -96,6 +94,30 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
+    - name: Create .env.production from secrets
+      run: |
+        cat > .env.production << EOF
+        ENV_NAME=production
+        SECRET_KEY=${{ secrets.SECRET_KEY }}
+        ALLOWED_HOSTS=${{ secrets.ALLOWED_HOSTS }}
+        DEBUG=False
+        POSTGRES_DB=${{ secrets.POSTGRES_DB }}
+        POSTGRES_USER=${{ secrets.POSTGRES_USER }}
+        POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
+        POSTGRES_HOST=db
+        POSTGRES_PORT=5432
+        REDIS_HOST=redis
+        REDIS_PORT=6379
+        REDIS_DB=0
+        STRIPE_API_KEY=${{ secrets.STRIPE_API_KEY }}
+        EMAIL_HOST=${{ secrets.EMAIL_HOST }}
+        EMAIL_PORT=${{ secrets.EMAIL_PORT }}
+        EMAIL_USE_TLS=True
+        EMAIL_HOST_USER=${{ secrets.EMAIL_HOST_USER }}
+        EMAIL_HOST_PASSWORD=${{ secrets.EMAIL_HOST_PASSWORD }}
+        DEFAULT_FROM_EMAIL=${{ secrets.DEFAULT_FROM_EMAIL }}
+        EOF
+
     - name: Copy .env.production to server
       uses: appleboy/scp-action@v0.1.7
       with:
@@ -114,6 +136,7 @@ jobs:
         key: ${{ secrets.SSH_PRIVATE_KEY }}
         script: |
           cd /app
+          mv .env.production .env
           docker compose -f docker-compose.yml pull
           docker compose -f docker-compose.yml up -d --remove-orphans
           docker system prune -f
