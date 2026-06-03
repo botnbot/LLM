@@ -58,9 +58,9 @@ CACHES = {
     }
 }
 
-STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
+STATIC_ROOT = '/code/static'
 STATICFILES_STORAGE = "django.contrib.staticfiles.storage.ManifestStaticFilesStorage"
-MEDIA_ROOT = os.path.join(BASE_DIR, "media")
+MEDIA_ROOT = '/code/media'
 
 # Security
 SECURE_SSL_REDIRECT = True

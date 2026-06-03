@@ -27,13 +27,12 @@ jobs:
         ports:
           - 5432:5432
         options: >-
-          --health-cmd pg_isready
+          --health-cmd "pg_isready -U postgres -d llm_db"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -49,8 +48,7 @@ jobs:
         run: poetry install --no-interaction --no-root
 
       - name: Run linter (flake8)
-        run: |
-          poetry run flake8 config/ --count --max-complexity=10 --statistics || true
+        run: poetry run flake8 config/ --count --max-complexity=10 --statistics
 
       - name: Create .env file
         run: |
@@ -69,8 +67,7 @@ jobs:
           POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
           POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
           SECRET_KEY: ${{ secrets.SECRET_KEY }}
-        run: |
-          poetry run python manage.py check
+        run: poetry run python manage.py check
 
       - name: Run tests with coverage
         env:
@@ -82,40 +79,34 @@ jobs:
           SECRET_KEY: ${{ secrets.SECRET_KEY }}
         run: |
           poetry run coverage run manage.py test
-          poetry run coverage report --fail-under=80 || true
+          poetry run coverage report --fail-under=80
 
-  # ============================================
-  # JOB 2: СБОРКА И ПУШ ОБРАЗА
-  # ============================================
   build:
     runs-on: ubuntu-latest
     needs: test
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Login to docker hub
-        uses: actions-hub/docker/login@master
-        env:
-          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
-
-      - name: Build :latest
-        run: docker build -t skoro55/llm:latest .
-
-      - name: Push to docker hub :latest
-        uses: actions-hub/docker@master
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
         with:
-          args: push skoro55/llm:latest
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
 
-  # ============================================
-  # JOB 3: ДЕПЛОЙ НА СЕРВЕР
-  # ============================================
+      - name: Build Docker image
+        run: docker build -t skoro55/llm:latest -t skoro55/llm:${{ github.sha }} .
+
+      - name: Push to Docker Hub
+        run: |
+          docker push skoro55/llm:latest
+          docker push skoro55/llm:${{ github.sha }}
+
   deploy:
     runs-on: ubuntu-latest
     needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     steps:
-      - name: Create .env from secrets
+      - name: Create .env.production from secrets
         run: |
           cat << EOF > .env.production
           ENV_NAME=production
@@ -132,7 +123,7 @@ jobs:
           REDIS_DB=0
           EMAIL_HOST=${{ secrets.EMAIL_HOST }}
           EMAIL_PORT=${{ secrets.EMAIL_PORT }}
-          EMAIL_USE_TLS=${{ secrets.EMAIL_USE_TLS }}
+          EMAIL_USE_TLS=true
           EMAIL_HOST_USER=${{ secrets.EMAIL_HOST_USER }}
           EMAIL_HOST_PASSWORD=${{ secrets.EMAIL_HOST_PASSWORD }}
           DEFAULT_FROM_EMAIL=${{ secrets.DEFAULT_FROM_EMAIL }}
@@ -144,19 +135,17 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
+      - name: Copy .env.production to server
+        run: |
+          scp -o StrictHostKeyChecking=no .env.production ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:~/llm-app/.env
+
       - name: Deploy with Docker Compose
         run: |
-          ssh -o StrictHostKeyChecking=no -p 22 ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} << 'EOF'
-            cd ~
-            if [ ! -d "llm-app/.git" ]; then
-              rm -rf llm-app
-              git clone https://github.com/botnbot/LLM.git llm-app
-            fi
-            cd llm-app
+          ssh -o StrictHostKeyChecking=no ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} << 'EOF'
+            cd ~/llm-app || (git clone https://github.com/botnbot/LLM.git llm-app && cd llm-app)
             git pull origin main
             docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
-            docker compose pull
-            docker compose down
-            docker compose up -d
-            docker system prune -f
+            docker compose -f docker-compose.yml pull
+            docker compose -f docker-compose.yml up -d --remove-orphans
+            docker system prune -af
           EOF
