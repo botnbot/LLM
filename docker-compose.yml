@@ -201,7 +201,7 @@ services:
     environment:
       POSTGRES_HOST: db
       REDIS_HOST: redis
-      DJANGO_SETTINGS_MODULE: core.settings.production
+      DJANGO_SETTINGS_MODULE: config.settings.production
     depends_on:
       db:
         condition: service_healthy
