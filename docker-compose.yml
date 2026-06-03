@@ -1,4 +1,3 @@
-
 services:
   db:
     image: postgres:16-alpine
@@ -15,7 +14,7 @@ services:
     ports:
       - "5432:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -44,7 +43,7 @@ services:
     ports:
       - "6379:6379"
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: [ "CMD", "redis-cli", "ping" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -70,18 +69,7 @@ services:
       - .env
     image: skoro55/llm:latest
     container_name: llm_web
-    command: >
-      sh -c "
-              python manage.py migrate --noinput &&
-              python manage.py collectstatic --noinput --clear &&
-              gunicorn config.wsgi:application
-              --workers ${GUNICORN_WORKERS:-4}
-              --threads ${GUNICORN_THREADS:-2}
-              --timeout 120
-              --keep-alive 5
-              --access-logfile -
-              --error-logfile -
-            "
+    command: sh -c "python manage.py migrate --noinput && python manage.py collectstatic --noinput --clear && gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 2 --threads 2 --timeout 120 --keep-alive 5 --access-logfile - --error-logfile -"
     environment:
       POSTGRES_HOST: db
       REDIS_HOST: redis
@@ -102,7 +90,7 @@ services:
       redis:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health/"]
+      test: [ "CMD", "curl", "-f", "http://localhost:8000/health/" ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -133,7 +121,7 @@ services:
       - "80:80"
       - "443:443"
     depends_on:
-     - web
+      - web
     healthcheck:
       test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/health/" ]
       interval: 30s
@@ -178,14 +166,14 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-#    healthcheck:
-#      test: >
-#        ["CMD-SHELL",
-#        "celery -A config inspect ping -d celery@$$HOSTNAME || exit 1"]
-#      interval: 30s
-#      timeout: 10s
-#      retries: 3
-#      start_period: 30s
+    #    healthcheck:
+    #      test: >
+    #        ["CMD-SHELL",
+    #        "celery -A config inspect ping -d celery@$$HOSTNAME || exit 1"]
+    #      interval: 30s
+    #      timeout: 10s
+    #      retries: 3
+    #      start_period: 30s
     restart: unless-stopped
     networks:
       - llm_network
@@ -221,10 +209,10 @@ services:
         condition: service_healthy
       celery:
         condition: service_started
-#    healthcheck:
-#      test: >
-#        ["CMD-SHELL",
-#        "celery -A config inspect ping -d celery@$$HOSTNAME || exit 1"]
+    #    healthcheck:
+    #      test: >
+    #        ["CMD-SHELL",
+    #        "celery -A config inspect ping -d celery@$$HOSTNAME || exit 1"]
     restart: unless-stopped
     networks:
       - llm_network
@@ -256,12 +244,12 @@ services:
     depends_on:
       - redis
       - celery
-#    healthcheck:
-#      test: ["CMD", "curl", "-f", "http://localhost:5555"]
-#      interval: 30s
-#      timeout: 10s
-#      retries: 3
-#      start_period: 20s
+    #    healthcheck:
+    #      test: ["CMD", "curl", "-f", "http://localhost:5555"]
+    #      interval: 30s
+    #      timeout: 10s
+    #      retries: 3
+    #      start_period: 20s
     restart: unless-stopped
     networks:
       - llm_network
