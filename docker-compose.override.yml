@@ -1,8 +1,0 @@
-services:
-  web:
-    command: python manage.py runserver 0.0.0.0:8000
-    volumes:
-      - .:/code
-    environment:
-      DEBUG: "True"
-      ENV_NAME: local

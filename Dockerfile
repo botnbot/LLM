@@ -1,68 +1,37 @@
-FROM python:3.12-slim AS builder
+FROM python:3.11-slim
 
-ARG POETRY_VERSION=1.8.3
+WORKDIR /code
 
-ENV \
-    POETRY_VIRTUALENVS_CREATE=false \
-    POETRY_NO_INTERACTION=1 \
-    POETRY_HOME=/opt/poetry
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    DJANGO_SETTINGS_MODULE=config.settings.production
 
-# Установка системных зависимостей для сборки
+# Устанавливаем системные зависимости
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     libpq-dev \
-    libmagic1 \
     curl \
     && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* \
-    && rm -rf /tmp/* /var/tmp/*
+    && rm -rf /var/lib/apt/lists/*
 
-# Установка Poetry
-RUN curl -sSL https://install.python-poetry.org | python3 - && \
-    ln -s /opt/poetry/bin/poetry /usr/local/bin/poetry
+# Копируем и устанавливаем Python зависимости
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
-WORKDIR /code
-
-# Копирование только файлов зависимостей (для кэширования)
-COPY pyproject.toml poetry.lock ./
-
-RUN poetry install --only main --no-root --no-interaction --no-ansi
-
+# Копируем проект
 COPY . .
 
-RUN poetry install --only main --no-interaction --no-ansi
+# Создаем пользователя и директории
+RUN addgroup --system app && adduser --system --group app && \
+    mkdir -p /var/log/django /code/static /code/media && \
+    chown -R app:app /code /var/log/django
 
-# Очистка кэша Poetry
-RUN rm -rf /root/.cache/pypoetry
-
-FROM python:3.12-slim
-
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    libpq-dev \
-    libmagic1 \
-    curl \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* \
-    && rm -rf /tmp/* /var/tmp/*
-
-WORKDIR /code
-
-# Копирование установленных Python пакетов из builder
-COPY --from=builder /usr/local/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages
-COPY --from=builder /usr/local/bin /usr/local/bin
-
-# Копирование кода приложения
-COPY --from=builder /code /code
-
-# Создание пользователя и директорий (только один раз!)
-RUN groupadd --system django && \
-    useradd --system --gid django django && \
-    mkdir -p /code/static /code/media /code/logs && \
-    chown -R django:django /code
+# Переключаемся на непривилегированного пользователя
+USER app
 
 EXPOSE 8000
 
-USER django
-
-HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:8000/health/ || exit 1
+
+CMD ["gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "4", "--threads", "2", "--graceful-timeout", "30", "--timeout", "120"]

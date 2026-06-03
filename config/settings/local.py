@@ -59,6 +59,15 @@ LOGGING = {
     "root": {"handlers": ["console"], "level": "DEBUG"},
 }
 
+SECURE_SSL_REDIRECT = False
+SECURE_PROXY_SSL_HEADER = None
+SESSION_COOKIE_SECURE = False
+CSRF_COOKIE_SECURE = False
+
 STRIPE_API_KEY = os.getenv("STRIPE_API_KEY", "sk_test_placeholder")
 
 print("🚀 LOCAL mode")
+
+LOGIN_URL = '/admin/login/'
+LOGIN_REDIRECT_URL = '/admin/'
+LOGOUT_REDIRECT_URL = '/admin/login/'
