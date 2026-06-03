@@ -62,7 +62,8 @@ class PaymentsSerializer(ModelSerializer):
             "paid_lesson_id",
             "paid_course",
             "paid_lesson",
-            "payment_method"
+            "payment_method",
+            'payment_link'
         ]
 
 
