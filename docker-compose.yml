@@ -69,15 +69,13 @@ services:
       - .env
     image: skoro55/llm:latest
     container_name: llm_web
-    command: sh -c "python manage.py migrate --noinput && python manage.py collectstatic --noinput --clear && gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 2 --threads 2 --timeout 120 --keep-alive 5 --access-logfile - --error-logfile -"
+    command: python manage.py runserver 0.0.0.0:8000
     environment:
       POSTGRES_HOST: db
       REDIS_HOST: redis
-      DJANGO_SETTINGS_MODULE: config.settings.production
+      DJANGO_SETTINGS_MODULE: config.settings.local
+      ENV_NAME: local
       SECURE_SSL_REDIRECT: "False"
-      SECURE_PROXY_SSL_HEADER: ""
-      SESSION_COOKIE_SECURE: "False"
-      CSRF_COOKIE_SECURE: "False"
       ALLOWED_HOSTS: "localhost,127.0.0.1,web"
     volumes:
       - static_volume:/code/static
@@ -89,26 +87,9 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-    healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:8000/health/" ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 60s
     restart: unless-stopped
     networks:
       - llm_network
-    deploy:
-      resources:
-        limits:
-          memory: 1G
-        reservations:
-          memory: 512M
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "5"  # Больше логов для web
 
   nginx:
     image: nginx:alpine
@@ -122,43 +103,20 @@ services:
       - "443:443"
     depends_on:
       - web
-    healthcheck:
-      test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/health/" ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 10s
-      # Альтернативный тест с curl:
-      # test: ["CMD", "curl", "-f", "http://localhost/health/"]
     restart: unless-stopped
     networks:
       - llm_network
-    deploy:
-      resources:
-        limits:
-          memory: 128M
-        reservations:
-          memory: 64M
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
 
   celery:
     image: skoro55/llm:latest
     container_name: llm_celery
-    command: >
-      celery -A config worker 
-      --loglevel=${CELERY_LOG_LEVEL:-info} 
-      --concurrency=${CELERY_WORKER_CONCURRENCY:-2}
-      --max-tasks-per-child=1000
+    command: celery -A config worker --loglevel=info --concurrency=2 --max-tasks-per-child=1000
     env_file:
       - .env
     environment:
       POSTGRES_HOST: db
       REDIS_HOST: redis
-      DJANGO_SETTINGS_MODULE: config.settings.production
+      DJANGO_SETTINGS_MODULE: config.settings.local
     volumes:
       - media_volume:/code/media
     depends_on:
@@ -166,42 +124,20 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-    #    healthcheck:
-    #      test: >
-    #        ["CMD-SHELL",
-    #        "celery -A config inspect ping -d celery@$$HOSTNAME || exit 1"]
-    #      interval: 30s
-    #      timeout: 10s
-    #      retries: 3
-    #      start_period: 30s
     restart: unless-stopped
     networks:
       - llm_network
-    deploy:
-      resources:
-        limits:
-          memory: 1G
-        reservations:
-          memory: 512M
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
 
   celery-beat:
     image: skoro55/llm:latest
     container_name: llm_celery_beat
-    command: >
-      celery -A config beat 
-      --loglevel=${CELERY_LOG_LEVEL:-info} 
-      --scheduler django_celery_beat.schedulers:DatabaseScheduler
+    command: celery -A config beat --loglevel=info --scheduler django_celery_beat.schedulers:DatabaseScheduler
     env_file:
       - .env
     environment:
       POSTGRES_HOST: db
       REDIS_HOST: redis
-      DJANGO_SETTINGS_MODULE: config.settings.production
+      DJANGO_SETTINGS_MODULE: config.settings.local
     depends_on:
       db:
         condition: service_healthy
@@ -209,63 +145,9 @@ services:
         condition: service_healthy
       celery:
         condition: service_started
-    #    healthcheck:
-    #      test: >
-    #        ["CMD-SHELL",
-    #        "celery -A config inspect ping -d celery@$$HOSTNAME || exit 1"]
     restart: unless-stopped
     networks:
       - llm_network
-    deploy:
-      resources:
-        limits:
-          memory: 256M
-        reservations:
-          memory: 128M
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
-
-  # Опционально: Flower для мониторинга Celery
-  flower:
-    image: mher/flower:2.0
-    container_name: llm_flower
-    command: >
-      celery --broker=redis://redis:6379/0 flower 
-      --port=5555 
-      --basic_auth=${FLOWER_USER:-admin}:${FLOWER_PASSWORD:-admin}
-      --url_prefix=flower
-    ports:
-      - "5555:5555"
-    environment:
-      REDIS_HOST: redis
-    depends_on:
-      - redis
-      - celery
-    #    healthcheck:
-    #      test: ["CMD", "curl", "-f", "http://localhost:5555"]
-    #      interval: 30s
-    #      timeout: 10s
-    #      retries: 3
-    #      start_period: 20s
-    restart: unless-stopped
-    networks:
-      - llm_network
-    deploy:
-      resources:
-        limits:
-          memory: 256M
-        reservations:
-          memory: 128M
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
-    profiles:
-      - monitoring
 
 volumes:
   postgres_data:
@@ -281,6 +163,3 @@ networks:
   llm_network:
     name: llm_network
     driver: bridge
-    ipam:
-      config:
-        - subnet: 172.20.0.0/16
